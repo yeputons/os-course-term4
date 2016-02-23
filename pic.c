@@ -58,6 +58,7 @@ void send_eoi(int irq) {
     if (ON_MASTER(irq)) {
         out8(MASTER_COMMAND_REG, 0x20);
     } else if (ON_SLAVE(irq)) {
+        out8(MASTER_COMMAND_REG, 0x20);
         out8(SLAVE_COMMAND_REG, 0x20);
     } else {
         printf("Invalid call: send_eoi(%d)", irq);
