@@ -1,6 +1,7 @@
 #include "interrupt.h"
 #include "serial.h"
 #include "printf.h"
+#include "memory.h"
 
 typedef void (*t_handler_asm)(void);
 
@@ -20,13 +21,15 @@ void set_int_descriptor(int id, t_handler_asm handler_asm) {
         return;
     }
 
-    int_descriptors[id][0] = (offset & 0xFFFF) // offset[15:0]
-            | ((3 * 8) << 16);  // code segment selector
-    int_descriptors[id][1] = (offset & 0xFFFF0000)   // offset[31:16] << 16
-            | (1 << 15)               // present flag
-            | (0 << 13)               // DPL = 0
-            | (14 << 8)               // type = 0b1110, 64-bit interrupt gate
-            | (0);                    // ist = 0, we assume that stack is always good, no need in IST
+    int_descriptors[id][0]
+        = (offset & 0xFFFF)    // offset[15:0]
+        | (KERNEL_CODE << 16); // code segment selector
+    int_descriptors[id][1]
+        = (offset & 0xFFFF0000) // offset[31:16] << 16
+        | (1 << 15)             // present flag
+        | (0 << 13)             // DPL = 0
+        | (14 << 8)             // type = 0b1110, 64-bit interrupt gate
+        | (0);                  // ist = 0, we assume that stack is always good, no need in IST
     int_descriptors[id][2] = (offset >> 32); // offset[63:32]
     int_descriptors[id][3] = 0; // reserved
 }
