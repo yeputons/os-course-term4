@@ -50,11 +50,7 @@ void set_int_handler(int irq, t_int_handler handler) {
 
 void init_idt(void) {
     for (int i = 0; i < INTS_COUNT; i++) {
-        if (i >= 21 && i <= 31) { // reserved by Intel
-            set_int_descriptor(i, NULL);
-        } else {
-            set_int_descriptor(i, int_handlers_asm[i]);
-        }
+        set_int_descriptor(i, int_handlers_asm[i]);
     }
     idt.base = (uint64_t)int_descriptors;
     idt.size = sizeof(int_descriptors) - 1;
