@@ -19,4 +19,7 @@ void main(void) {
     puts("Done");
 
     printf("2 + 2 = %d, str=%s\n", 2 + 2, "hello");
+    char buf[6];
+    int res = snprintf(buf, sizeof buf, "%d", 123456789);
+    printf("|%s|%d\n", buf, res);
 }
