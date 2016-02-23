@@ -12,6 +12,14 @@ uint32_t int_descriptors[INTS_COUNT][4];
 
 void set_int_descriptor(int id, t_handler_asm handler_asm) {
     uint64_t offset = (uint64_t)handler_asm;
+    if (offset == 0) {
+        int_descriptors[id][0] =
+        int_descriptors[id][1] =
+        int_descriptors[id][2] =
+        int_descriptors[id][3] = 0;
+        return;
+    }
+
     int_descriptors[id][0] = (offset & 0xFFFF) // offset[15:0]
             | ((3 * 8) << 16);  // code segment selector
     int_descriptors[id][1] = (offset & 0xFFFF0000)   // offset[31:16] << 16
@@ -23,13 +31,27 @@ void set_int_descriptor(int id, t_handler_asm handler_asm) {
     int_descriptors[id][3] = 0; // reserved
 }
 
+t_int_handler handlers[INTS_COUNT];
+
 void int_handler(uint64_t value) {
-    printf("int_handler(%lld)\n", value);
+    if (!handlers[value]) {
+        printf("unexpected int_handler(%lld)\n", value);
+    } else {
+        handlers[value](value);
+    }
+}
+
+void set_int_handler(int irq, t_int_handler handler) {
+    handlers[irq] = handler;
 }
 
 void init_idt(void) {
     for (int i = 0; i < INTS_COUNT; i++) {
-        set_int_descriptor(i, int_handlers_asm[i]);
+        if (i >= 21 && i <= 31) { // reserved by Intel
+            set_int_descriptor(i, NULL);
+        } else {
+            set_int_descriptor(i, int_handlers_asm[i]);
+        }
     }
     idt.base = (uint64_t)int_descriptors;
     idt.size = sizeof(int_descriptors) - 1;
