@@ -1,33 +1,34 @@
     .code64
-    .global int_handler_asm
+    .altmacro
+    .align 16
+    .global int_handlers_asm
     .extern int_handler
 
-.macro int_handler_asm name, id
-    .global \name
+.macro REP from, to, action
+    .if \to-\from == 1
+    action \from
+    .else
+    // Avoiding "macros nested too deeply" error
+    REP \from, %((\from+\to)/2), action
+    REP %((\from+\to)/2), \to, action
+    .endif
+.endm
+
+.macro DEF_INT_HANDLER id
+    .global int_handler_asm_\id
+    int_handler_asm_\id:
     mov $\id, %rdi
     call int_handler
     iretq
 .endm
 
-#define h(id) int_handler_asm_##id: int_handler_asm int_handler_asm_##id id
-h(0)
-h(1)
-h(2)
-h(3)
-h(4)
-h(5)
-h(6)
-h(7)
-h(8)
-h(9)
-h(10)
-h(11)
-h(12)
-h(13)
-h(14)
-h(15)
-h(16)
-h(17)
-h(18)
-h(19)
-h(20)
+    REP 0, 256, DEF_INT_HANDLER
+
+    .data
+
+.macro STORE_INT_HANDLER id
+    .quad int_handler_asm_\id
+.endm
+
+int_handlers_asm:
+    REP 0, 256, STORE_INT_HANDLER
