@@ -1,5 +1,6 @@
 #include "interrupt.h"
 #include "serial.h"
+#include "printf.h"
 
 void int_handler_asm_0(void);
 void int_handler_asm_1(void);
@@ -44,18 +45,7 @@ void set_int_descriptor(int id, t_handler_asm handler_asm) {
 }
 
 void int_handler(uint64_t value) {
-    putchar('i');
-    putchar('n');
-    putchar('t');
-    putchar(' ');
-    if (value >= 100) {
-        putchar('0' + (value / 100) % 10);
-    }
-    if (value >= 10) {
-        putchar('0' + (value / 10) % 10);
-    }
-    putchar('0' + (value / 1) % 10);
-    putchar('\n');
+    printf("int_handler(%lld)\n", value);
 }
 
 void init_idt(void) {

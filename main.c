@@ -1,5 +1,6 @@
 #include "serial.h"
 #include "interrupt.h"
+#include "printf.h"
 
 void main(void) {
     __asm__("cli");
@@ -16,4 +17,6 @@ void main(void) {
     __asm__("int $4");
     __asm__("int $5");
     puts("Done");
+
+    printf("2 + 2 = %d, str=%s\n", 2 + 2, "hello");
 }
