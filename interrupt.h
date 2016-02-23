@@ -11,4 +11,6 @@ struct idt_ptr {
 static inline void set_idt(const struct idt_ptr *ptr)
 { __asm__ volatile ("lidt (%0)" : : "a"(ptr)); }
 
+void init_idt(void);
+
 #endif /*__INTERRUPT_H__*/
