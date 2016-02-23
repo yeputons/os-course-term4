@@ -71,7 +71,7 @@
                 
                 int base = 10;
                 if (spec == 'o') base = 8;
-                if (spec == 'x' || spec == 'X') base = 16;
+                if (spec == 'x' || spec == 'X' || spec == 'p') base = 16;
                 char base_hex = spec == 'X' ? 'A' : 'a';
                 
                 char buf[30];
