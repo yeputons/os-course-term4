@@ -14,7 +14,7 @@
     .endif
 .endm
 
-.macro DEF_INT_HANDLER id
+.macro DEF_INT_HANDLER id, errcode
     .global int_handler_asm_\id
     int_handler_asm_\id:
     push %rax
@@ -33,6 +33,11 @@
     push %r13
     push %r14
     push %r15
+    .if errcode != 0
+    mov (16*8)(%rsp), %rsi // reading stack top before our 16 pushes
+    .else
+    mov $0, %rsi
+    .endif
     mov $\id, %rdi
     call int_handler
     pop %r15
@@ -51,10 +56,27 @@
     pop %rcx
     pop %rbx
     pop %rax
+    .if errcode != 0
+    sub $8, %rsp // get rid of error code
+    .endif
     iretq
 .endm
 
-    REP 0, 256, DEF_INT_HANDLER
+.macro DEF_INT_HANDLER_NOERR id
+    DEF_INT_HANDLER id, 0
+.endm
+.macro DEF_INT_HANDLER_ERR id
+    DEF_INT_HANDLER id, 1
+.endm
+
+    REP  0,   8, DEF_INT_HANDLER_NOERR
+    DEF_INT_HANDLER_ERR   8
+    DEF_INT_HANDLER_NOERR 9
+    REP 10,  15, DEF_INT_HANDLER_ERR
+    DEF_INT_HANDLER_NOERR 15
+    DEF_INT_HANDLER_NOERR 16
+    DEF_INT_HANDLER_ERR   17
+    REP 18, 256, DEF_INT_HANDLER_NOERR
 
     .data
 

@@ -36,11 +36,11 @@ void set_int_descriptor(int id, t_handler_asm handler_asm) {
 
 t_int_handler handlers[INTS_COUNT];
 
-void int_handler(uint64_t value) {
+void int_handler(uint64_t value, uint64_t error_code) {
     if (!handlers[value]) {
-        printf("unexpected int_handler(%lld)\n", value);
+        printf("unexpected int_handler(%lld, 0x%llx)\n", value, error_code);
     } else {
-        handlers[value](value);
+        handlers[value](value, error_code);
     }
 }
 

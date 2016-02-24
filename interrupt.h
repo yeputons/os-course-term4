@@ -13,7 +13,7 @@ static inline void set_idt(const struct idt_ptr *ptr)
 
 void init_idt(void);
 
-typedef void (*t_int_handler)(int irq);
+typedef void (*t_int_handler)(int irq, uint64_t error_code);
 
 void set_int_handler(int irq, t_int_handler handler);
 
