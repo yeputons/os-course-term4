@@ -15,7 +15,6 @@
 .endm
 
 .macro DEF_INT_HANDLER id, errcode
-    .global int_handler_asm_\id
     int_handler_asm_\id:
     push %rax
     push %rbx
