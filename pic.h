@@ -3,10 +3,10 @@
 
 void init_pic(void);
 
-void send_eoi(int irq);
+void send_eoi(int intererupt_id);
 
-void pic_mask(int irq);
-void pic_unmask(int irq);
+void pic_mask(int intererupt_id);
+void pic_unmask(int intererupt_id);
 
 #define LPIC_MASTER_ICW 0x20
 #define LPIC_SLAVE_ICW  0x28

@@ -27,40 +27,40 @@ void init_pic(void) {
     out8(SLAVE_INT_MASK_REG, -1);
 }
 
-#define ON_MASTER(irq) ((irq) >= LPIC_MASTER_ICW && (irq) < LPIC_MASTER_ICW + 8)
-#define ON_SLAVE(irq)  ((irq) >= LPIC_SLAVE_ICW  && (irq) < LPIC_SLAVE_ICW + 8)
+#define ON_MASTER(interrupt_id) ((interrupt_id) >= LPIC_MASTER_ICW && (interrupt_id) < LPIC_MASTER_ICW + 8)
+#define ON_SLAVE(interrupt_id)  ((interrupt_id) >= LPIC_SLAVE_ICW  && (interrupt_id) < LPIC_SLAVE_ICW + 8)
 
-void pic_mask(int irq) {
-    if (ON_MASTER(irq)) {
-        irq -= LPIC_MASTER_ICW;
-        out8(MASTER_INT_MASK_REG, in8(MASTER_INT_MASK_REG) | (1 << irq));
-    } else if (ON_SLAVE(irq)) {
-        irq -= LPIC_SLAVE_ICW;
-        out8(SLAVE_INT_MASK_REG, in8(SLAVE_INT_MASK_REG) | (1 << irq));
+void pic_mask(int interrupt_id) {
+    if (ON_MASTER(interrupt_id)) {
+        interrupt_id -= LPIC_MASTER_ICW;
+        out8(MASTER_INT_MASK_REG, in8(MASTER_INT_MASK_REG) | (1 << interrupt_id));
+    } else if (ON_SLAVE(interrupt_id)) {
+        interrupt_id -= LPIC_SLAVE_ICW;
+        out8(SLAVE_INT_MASK_REG, in8(SLAVE_INT_MASK_REG) | (1 << interrupt_id));
     } else {
-        printf("Invalid call: pic_mask(%d)", irq);
+        printf("Invalid call: pic_mask(%d)", interrupt_id);
     }
 }
 
-void pic_unmask(int irq) {
-    if (ON_MASTER(irq)) {
-        irq -= LPIC_MASTER_ICW;
-        out8(MASTER_INT_MASK_REG, in8(MASTER_INT_MASK_REG) & ~(1 << irq));
-    } else if (ON_SLAVE(irq)) {
-        irq -= LPIC_SLAVE_ICW;
-        out8(SLAVE_INT_MASK_REG, in8(SLAVE_INT_MASK_REG) & ~(1 << irq));
+void pic_unmask(int interrupt_id) {
+    if (ON_MASTER(interrupt_id)) {
+        interrupt_id -= LPIC_MASTER_ICW;
+        out8(MASTER_INT_MASK_REG, in8(MASTER_INT_MASK_REG) & ~(1 << interrupt_id));
+    } else if (ON_SLAVE(interrupt_id)) {
+        interrupt_id -= LPIC_SLAVE_ICW;
+        out8(SLAVE_INT_MASK_REG, in8(SLAVE_INT_MASK_REG) & ~(1 << interrupt_id));
     } else {
-        printf("Invalid call: pic_unmask(%d)", irq);
+        printf("Invalid call: pic_unmask(%d)", interrupt_id);
     }
 }
 
-void send_eoi(int irq) {
-    if (ON_MASTER(irq)) {
+void send_eoi(int interrupt_id) {
+    if (ON_MASTER(interrupt_id)) {
         out8(MASTER_COMMAND_REG, 0x20);
-    } else if (ON_SLAVE(irq)) {
+    } else if (ON_SLAVE(interrupt_id)) {
         out8(MASTER_COMMAND_REG, 0x20);
         out8(SLAVE_COMMAND_REG, 0x20);
     } else {
-        printf("Invalid call: send_eoi(%d)", irq);
+        printf("Invalid call: send_eoi(%d)", interrupt_id);
     }
 }

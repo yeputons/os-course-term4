@@ -21,6 +21,6 @@ struct interrupt_info {
 
 typedef void (*t_int_handler)(const struct interrupt_info *info);
 
-void set_int_handler(int irq, t_int_handler handler);
+void set_int_handler(int intererupt_id, t_int_handler handler);
 
 #endif /*__INTERRUPT_H__*/

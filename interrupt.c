@@ -44,8 +44,8 @@ void int_handler(const struct interrupt_info *info) {
     }
 }
 
-void set_int_handler(int irq, t_int_handler handler) {
-    handlers[irq] = handler;
+void set_int_handler(int interrupt_id, t_int_handler handler) {
+    handlers[interrupt_id] = handler;
 }
 
 void init_idt(void) {
