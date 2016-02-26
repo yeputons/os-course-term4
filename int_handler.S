@@ -14,8 +14,9 @@
     .endif
 .endm
 
-.macro DEF_INT_HANDLER id, errcode
-    int_handler_asm_\id:
+int_handler_common:
+    // assumes that error code and interrupt id are already pushed
+    // interrupt id is on the top
     push %rax
     push %rbx
     push %rcx
@@ -32,12 +33,8 @@
     push %r13
     push %r14
     push %r15
-    .if errcode != 0
-    mov (16*8)(%rsp), %rsi // reading stack top before our 16 pushes
-    .else
-    mov $0, %rsi
-    .endif
-    mov $\id, %rdi
+    mov (16*8)(%rsp), %rdi // interrupt id
+    mov (17*8)(%rsp), %rsi // error code
     call int_handler
     pop %r15
     pop %r14
@@ -55,17 +52,19 @@
     pop %rcx
     pop %rbx
     pop %rax
-    .if errcode != 0
-    sub $8, %rsp // get rid of error code
-    .endif
+    add $16, %rsp // get rid of error code and interrupt it
     iretq
-.endm
 
 .macro DEF_INT_HANDLER_NOERR id
-    DEF_INT_HANDLER id, 0
+    int_handler_asm_\id:
+    pushq $0 // fake error code
+    pushq $\id
+    jmp int_handler_common
 .endm
 .macro DEF_INT_HANDLER_ERR id
-    DEF_INT_HANDLER id, 1
+    int_handler_asm_\id:
+    pushq $\id
+    jmp int_handler_common
 .endm
 
     REP  0,   8, DEF_INT_HANDLER_NOERR
