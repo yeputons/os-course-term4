@@ -6,8 +6,8 @@
 
 int timer_step;
 
-void timer(int irq, __attribute__((unused)) uint64_t error_code) {
-    send_eoi(irq);
+void timer(const struct interrupt_info *info) {
+    send_eoi(info->interrupt_id);
     printf("Timer! step=%d\n", timer_step++);
 }
 

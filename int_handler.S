@@ -33,8 +33,7 @@ int_handler_common:
     push %r13
     push %r14
     push %r15
-    mov (16*8)(%rsp), %rdi // interrupt id
-    mov (17*8)(%rsp), %rsi // error code
+    mov %rsp, %rdi
     call int_handler
     pop %r15
     pop %r14

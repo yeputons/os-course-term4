@@ -13,7 +13,13 @@ static inline void set_idt(const struct idt_ptr *ptr)
 
 void init_idt(void);
 
-typedef void (*t_int_handler)(int irq, uint64_t error_code);
+struct interrupt_info {
+    uint64_t r15, r14, r13, r12, r11, r10, r9, r8;
+    uint64_t rsp, rbp, rsi, rdi, rdx, rcx, rbx, rax;
+    uint64_t interrupt_id, error_code;
+} __attribute__((packed));
+
+typedef void (*t_int_handler)(const struct interrupt_info *info);
 
 void set_int_handler(int irq, t_int_handler handler);
 
