@@ -34,6 +34,7 @@ int_handler_common:
     push %r14
     push %r15
     mov %rsp, %rdi
+    cld
     call int_handler
     pop %r15
     pop %r14
