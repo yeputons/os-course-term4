@@ -36,7 +36,7 @@ void set_int_descriptor(int id, t_handler_asm handler_asm) {
 
 t_int_handler handlers[INTS_COUNT];
 
-void int_handler(const struct interrupt_info *info) {
+void int_handler(struct interrupt_info *info) {
     if (!handlers[info->interrupt_id]) {
         printf("unexpected int_handler(%lld, 0x%llx)\n", info->interrupt_id, info->error_code);
     } else {

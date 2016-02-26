@@ -6,7 +6,7 @@
 
 int timer_step;
 
-void timer(const struct interrupt_info *info) {
+void timer(struct interrupt_info *info) {
     send_eoi(info->interrupt_id);
     printf("Timer! step=%d\n", timer_step++);
 }
