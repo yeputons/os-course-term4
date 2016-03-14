@@ -2,6 +2,12 @@
 #include "util.h"
 #include "printf.h"
 
+size_t strlen(const char *s) {
+    size_t result = 0;
+    while (*s) s++, result++;
+    return result;
+}
+
 void die(const char *format, ...) {
     va_list args;
     va_start(args, format);
