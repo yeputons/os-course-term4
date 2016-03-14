@@ -37,6 +37,8 @@ static inline phys_t pa(const void *addr)
 static inline void *va(phys_t addr)
 { return (void *)VA(addr); }
 
+void init_memory();
+
 #endif /*__ASM_FILE__*/
 
 #endif /*__MEMORY_H__*/
