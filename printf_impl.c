@@ -6,6 +6,19 @@
         }
         i++;
         
+        char left_pad = ' ';
+        if (format[i] == '0') { left_pad = '0'; i++; }
+        int width = 0;
+        if (format[i] == '*') {
+            width = va_arg(args, int);
+            i++;
+        } else {
+            while (format[i] >= '0' && format[i] <= '9') {
+                width = width * 10 + format[i] - '0';
+                i++;
+            }
+        }
+
         int h = 0, l = 0, z = 0;
         while (format[i] == 'h') h++, i++;
         while (format[i] == 'l') l++, i++;
@@ -15,18 +28,27 @@
         i++;
         switch (spec) {
             case 'c':
+                for (int i = 1; i < width; i++) {
+                    addchar(left_pad);
+                }
                 // ignoring %lc
                 addchar((char) va_arg(args, int));
                 break;
             case 's': {
                 // ignoring %ls
                 char *s = va_arg(args, char*);
+                for (int i = strlen(s); i < width; i++) {
+                    addchar(left_pad);
+                }
                 while (*s) {
                     addchar(*s);
                     s++;
                 }
             }   break;
             case '%':
+                for (int i = 1; i < width; i++) {
+                    addchar(left_pad);
+                }
                 addchar('%');
                 break;
             case 'n':
@@ -62,10 +84,11 @@
                 } else if (spec == 'p') {
                     data = (uint64_t) va_arg(args, void*);
                 }
+                char sign = 0;
                 if (spec == 'd' || spec == 'i') {
                     int64_t signed_data = data;
                     if (signed_data < 0) {
-                        addchar('-');
+                        sign = '-';
                         data = -data;
                     }
                 }
@@ -86,6 +109,15 @@
                         if (digit >= 10) c = base_hex + digit - 10;
                         buf[bptr++] = c;
                     }
+                }
+                if (sign && left_pad == '0') {
+                    addchar(sign);
+                }
+                for (int i = bptr + !!sign; i < width; i++) {
+                    addchar(left_pad);
+                }
+                if (sign && left_pad != '0') {
+                    addchar(sign);
                 }
                 for (bptr--; bptr >= 0; bptr--) {
                     addchar(buf[bptr]);

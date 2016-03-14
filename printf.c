@@ -1,5 +1,6 @@
 #include "printf.h"
 #include "serial.h"
+#include "util.h"
 #include <stddef.h>
 #include <stdint.h>
 
