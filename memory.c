@@ -2,6 +2,9 @@
 #include "printf.h"
 #include "util.h"
 #include "multiboot.h"
+#include "buddy.h"
+
+struct buddy_allocator first_buddy;
 
 void init_memory(void) {
     if (!(mboot_info->flags & (1 << 6))) {
@@ -21,4 +24,5 @@ void init_memory(void) {
     if (mboot_info->mmap_addr + mboot_info->mmap_length > 1024 * 1024) {
         die("mboot_info->mmap ends in upper memory");
     }
+    buddy_init(&first_buddy, 0);
 }
