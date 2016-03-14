@@ -211,7 +211,7 @@ uint64_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
 
 void buddy_free(struct buddy_allocator *a, uint64_t ptr, uint64_t size) {
     assert(1 <= size && size <= MAX_PAGE_SIZE);
-    assert(a->start <= ptr && ptr < a->start + MAX_PAGE_SIZE);
+    assert(a->start <= ptr && ptr +size <= a->start + MAX_PAGE_SIZE);
     int lev = LAST_LEV;
     while (buddy_size(lev) < (int)size) {
         lev--;
