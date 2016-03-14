@@ -66,6 +66,7 @@
                     int64_t signed_data = data;
                     if (signed_data < 0) {
                         addchar('-');
+                        data = -data;
                     }
                 }
                 
