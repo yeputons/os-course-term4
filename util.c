@@ -8,6 +8,12 @@ size_t strlen(const char *s) {
     return result;
 }
 
+void memset(void* buf, char c, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+        ((char*)buf)[i] = c;
+    }
+}
+
 void die(const char *format, ...) {
     va_list args;
     va_start(args, format);
