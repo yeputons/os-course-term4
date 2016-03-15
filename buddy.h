@@ -2,6 +2,7 @@
 #define _BUDDY_H
 
 #include <stdint.h>
+#include "memory.h"
 
 #define BUDDY_LEVELS (30 - 12 + 1) // max is 1GB page, min is 4KB page
 #define BUDDIES_CNT (1 << BUDDY_LEVELS)
@@ -18,10 +19,10 @@ struct buddy_allocator {
     int firsts[BUDDY_LEVELS];
 };
 
-void buddy_init(struct buddy_allocator *a, uint64_t start);
+void buddy_init(struct buddy_allocator *a, phys_t start);
 void buddy_debug_print(struct buddy_allocator *a);
 
-uint64_t buddy_alloc(struct buddy_allocator *a, uint64_t size);
-void buddy_free(struct buddy_allocator *a, uint64_t ptr, uint64_t size);
+phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size);
+void buddy_free(struct buddy_allocator *a, phys_t ptr, uint64_t size);
 
 #endif

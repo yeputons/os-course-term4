@@ -49,7 +49,7 @@ void remove_one(struct buddy_allocator *a, int lev, int i) {
 #define lies_on_level(lev, i) ((1 << (lev)) <= (i) && (i) <= (2 << (lev)))
 #define buddy_size(lev) (MIN_PAGE_SIZE << (LAST_LEV - (lev)))
 
-void reserve_for_init(struct buddy_allocator *a, uint64_t start, uint64_t end) {
+void reserve_for_init(struct buddy_allocator *a, phys_t start, phys_t end) {
     #ifdef BUDDY_DEBUG
     printf("reserve_for_init %p..%p\n", start, end);
     #endif
@@ -127,7 +127,7 @@ void buddy_debug_print(struct buddy_allocator *a) {
 extern char text_phys_begin[];
 extern char bss_phys_end[];
 
-void buddy_init(struct buddy_allocator *a, uint64_t start) {
+void buddy_init(struct buddy_allocator *a, phys_t start) {
     a->start = start;
     assert(a->start < (1LL << 48));
     assert(a->start % MAX_PAGE_SIZE == 0);
@@ -147,7 +147,7 @@ void buddy_init(struct buddy_allocator *a, uint64_t start) {
     a->firsts[LAST_LEV] = LAST_LEV_START;
     
     reserve_for_init(a, 0, 1024 * 1024);
-    reserve_for_init(a, (uint64_t)text_phys_begin, (uint64_t)bss_phys_end);
+    reserve_for_init(a, (phys_t)text_phys_begin, (phys_t)bss_phys_end);
 
     struct mboot_memory_segm *segm = (void*)(uint64_t)mboot_info->mmap_addr;
     struct mboot_memory_segm *segm_end = (void*)((uint64_t)mboot_info->mmap_addr + mboot_info->mmap_length);
@@ -193,7 +193,7 @@ int get_from_level(struct buddy_allocator *a, int lev) {
     return 2 * parent;
 }
 
-uint64_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
+phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
     assert(1 <= size && size <= MAX_PAGE_SIZE);
     int lev = LAST_LEV;
     while (buddy_size(lev) < (int)size) {
@@ -209,7 +209,7 @@ uint64_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
     return a->start + (uint64_t)result * buddy_size(lev);
 }
 
-void buddy_free(struct buddy_allocator *a, uint64_t ptr, uint64_t size) {
+void buddy_free(struct buddy_allocator *a, phys_t ptr, uint64_t size) {
     assert(1 <= size && size <= MAX_PAGE_SIZE);
     assert(a->start <= ptr && ptr +size <= a->start + MAX_PAGE_SIZE);
     int lev = LAST_LEV;
