@@ -11,6 +11,7 @@ struct buddy_info {
     int prev_free:(BUDDY_LEVELS + 2); // 2**(BUDDY_LEVELS+1) nodes in total, plus one sign bit
     int next_free:(BUDDY_LEVELS + 2);
     unsigned is_free:1;
+    unsigned allocated_level:5;
 };
 
 struct buddy_allocator {
@@ -23,6 +24,6 @@ void buddy_init(struct buddy_allocator *a, phys_t start);
 void buddy_debug_print(struct buddy_allocator *a);
 
 phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size);
-void buddy_free(struct buddy_allocator *a, phys_t ptr, uint64_t size);
+void buddy_free(struct buddy_allocator *a, phys_t ptr);
 
 #endif

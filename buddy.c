@@ -136,6 +136,7 @@ void buddy_init(struct buddy_allocator *a, phys_t start) {
         a->buddies[i].prev_free = -1;
         a->buddies[i].next_free = -1;
         a->buddies[i].is_free = 0;
+        a->buddies[i].allocated_level = BUDDY_LEVELS;
     }
     for (int i = LAST_LEV_START; i < LAST_LEV_END; i++) {
         a->buddies[i].prev_free = (i > LAST_LEV_START) ? i - 1 : -1;
@@ -206,21 +207,35 @@ phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
     #endif
     int result = get_from_level(a, lev);
     assert(lies_on_level(lev, result));
+
+    int child = result << (LAST_LEV - lev);
+    assert(lies_on_level(LAST_LEV, child));
+    assert(a->buddies[child].allocated_level == BUDDY_LEVELS);
+    a->buddies[child].allocated_level = lev;
+    #ifdef BUDDY_DEBUG
+    printf("  marked child %d with lev=%d\n", child, lev);
+    #endif
+
     result -= 1 << lev;
     return a->start + (uint64_t)result * buddy_size(lev);
 }
 
-void buddy_free(struct buddy_allocator *a, phys_t ptr, uint64_t size) {
-    assert(1 <= size && size <= MAX_PAGE_SIZE);
-    assert(a->start <= ptr && ptr +size <= a->start + MAX_PAGE_SIZE);
-    int lev = LAST_LEV;
-    while (buddy_size(lev) < (int)size) {
-        lev--;
-        assert(lev >= 0);
-    }
+void buddy_free(struct buddy_allocator *a, phys_t ptr) {
+    assert(a->start <= ptr && ptr < a->start + MAX_PAGE_SIZE);
+    assert((ptr - a->start) % MIN_PAGE_SIZE == 0);
+
+    int child = (ptr - a->start) / MIN_PAGE_SIZE + LAST_LEV_START;
     #ifdef BUDDY_DEBUG
-    printf("buddy_free: %p, size=%llf\n", ptr, size);
+    printf("buddy_free: ptr=%p; child=%d\n", ptr, child);
     #endif
+    assert(lies_on_level(LAST_LEV, child));
+    int lev = a->buddies[child].allocated_level;
+    assert(lev < BUDDY_LEVELS);
+    a->buddies[child].allocated_level = BUDDY_LEVELS;
+    #ifdef BUDDY_DEBUG
+    printf("  lev=%d, size=%d\n", lev, MIN_PAGE_SIZE << lev);
+    #endif
+
     ptr -= a->start;
     assert(ptr % buddy_size(lev) == 0);
     int i = (1 << lev) + (ptr / buddy_size(lev));
