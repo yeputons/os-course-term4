@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "buddy.h"
 #include "printf.h"
 #include "util.h"
@@ -77,23 +78,23 @@ void reserve_for_init(struct buddy_allocator *a, phys_t start, phys_t end) {
     }
 }
 
-int try_merge_one(struct buddy_allocator *a, int lev, int i) {
+bool try_merge_one(struct buddy_allocator *a, int lev, int i) {
     assert(lies_on_level(lev, i));
     assert(lev >= 0);
     if (lev == 0) {
-        return 0;
+        return false;
     }
     if (i & 1) {
         i ^= 1;
     }
     if (!a->buddies[i].is_free || !a->buddies[i + 1].is_free) {
-        return 0;
+        return false;
     }
     assert(lev > 0);
     remove_one(a, lev, i);
     remove_one(a, lev, i + 1);
     add_one(a, lev - 1, i / 2);
-    return 1;
+    return true;
 }
 
 void try_merge_rec(struct buddy_allocator *a, int lev, int i) {
