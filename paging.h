@@ -26,7 +26,7 @@ static inline bool pte_large(pte_t pte)
 { return (pte & PTE_LARGE) != 0; }
 
 static inline phys_t pte_phys(pte_t pte)
-{ return (phys_t)((pte >> 12) & 0xfffffffffull); }
+{ return (phys_t)(((pte >> 12) & 0xfffffffffull) << 12); }
 
 static inline int pml4_i(virt_t addr)
 { return (int)((addr >> 39) & 0x1ff); }
