@@ -50,7 +50,7 @@ void remove_one(struct buddy_allocator *a, int lev, int i) {
 #define lies_on_level(lev, i) ((1 << (lev)) <= (i) && (i) <= (2 << (lev)))
 #define buddy_size(lev) (MIN_PAGE_SIZE << (LAST_LEV - (lev)))
 
-void reserve_for_init(struct buddy_allocator *a, phys_t start, phys_t end) {
+void mark_for_init(struct buddy_allocator *a, phys_t start, phys_t end, bool available) {
     #ifdef BUDDY_DEBUG
     printf("reserve_for_init %p..%p\n", start, end);
     #endif
@@ -72,8 +72,11 @@ void reserve_for_init(struct buddy_allocator *a, phys_t start, phys_t end) {
     end += LAST_LEV_START;
     assert(start < end && end <= BUDDIES_CNT);
     for (int i = start; i < (int)end; i++) {
-        if (a->buddies[i].is_free) {
+        if (a->buddies[i].is_free && !available) {
             remove_one(a, LAST_LEV, i);
+        }
+        if (!a->buddies[i].is_free && available) {
+            add_one(a, LAST_LEV, i);
         }
     }
 }
@@ -138,28 +141,21 @@ void buddy_init(struct buddy_allocator *a, phys_t start) {
         a->buddies[i].is_free = 0;
         a->buddies[i].allocated_level = BUDDY_LEVELS;
     }
-    for (int i = LAST_LEV_START; i < LAST_LEV_END; i++) {
-        a->buddies[i].prev_free = (i > LAST_LEV_START) ? i - 1 : -1;
-        a->buddies[i].next_free = (i + 1 < LAST_LEV_END) ? i + 1 : -1;
-        a->buddies[i].is_free = 1;
-    }
     for (int i = 0; i < BUDDY_LEVELS; i++) {
         a->firsts[i] = -1;
     }
-    a->firsts[LAST_LEV] = LAST_LEV_START;
-    
-    reserve_for_init(a, 0, 1024 * 1024);
-    reserve_for_init(a, (phys_t)text_phys_begin, (phys_t)bss_phys_end);
 
     struct mboot_memory_segm *segm = (void*)(uint64_t)mboot_info->mmap_addr;
     struct mboot_memory_segm *segm_end = (void*)((uint64_t)mboot_info->mmap_addr + mboot_info->mmap_length);
     while (segm < segm_end) {
-        if (segm->type != 1) {
-            reserve_for_init(a, segm->base_addr, segm->base_addr + segm->length);
+        if (segm->type == 1) {
+            mark_for_init(a, segm->base_addr, segm->base_addr + segm->length, /* available */ true);
         }
         segm = (void*)((uint64_t)segm + segm->size + 4);
     }
-    
+    mark_for_init(a, 0, 1024 * 1024, /* available */ false);
+    mark_for_init(a, (phys_t)text_phys_begin, (phys_t)bss_phys_end, /* available, */ false);
+
     for (int lev = LAST_LEV; lev >= 0; lev--) {
         int start = (1 << lev), end = start + (1 << lev);
         for (int i = start; i < end; i += 2) {
