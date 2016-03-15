@@ -19,6 +19,7 @@
 #ifndef __ASM_FILE__
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define BOOTMEM_SIZE      (4ull * 1024ull * 1024ull * 1024ull)
 
@@ -38,6 +39,11 @@ static inline void *va(phys_t addr)
 { return (void *)VA(addr); }
 
 void init_memory();
+
+phys_t alloc_phys_aligned(size_t size);
+void free_phys_aligned(phys_t ptr);
+
+extern uint64_t phys_mem_end;
 
 #endif /*__ASM_FILE__*/
 
