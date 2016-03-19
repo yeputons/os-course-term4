@@ -9,7 +9,7 @@
 
 //#define BUDDY_DEBUG
 
-void add_one(struct buddy_allocator *a, int lev, int i) {
+static void add_one(struct buddy_allocator *a, int lev, int i) {
     assert(!a->buddies[i].is_free);
     a->buddies[i].is_free = 1;
     assert(a->buddies[i].prev_free == -1);
@@ -23,7 +23,7 @@ void add_one(struct buddy_allocator *a, int lev, int i) {
     a->firsts[lev] = i;
 }
 
-void remove_one(struct buddy_allocator *a, int lev, int i) {
+static void remove_one(struct buddy_allocator *a, int lev, int i) {
     assert(a->buddies[i].is_free);
     int p = a->buddies[i].prev_free;
     int n = a->buddies[i].next_free;
@@ -50,7 +50,7 @@ void remove_one(struct buddy_allocator *a, int lev, int i) {
 #define lies_on_level(lev, i) ((1 << (lev)) <= (i) && (i) <= (2 << (lev)))
 #define buddy_size(lev) (MIN_PAGE_SIZE << (LAST_LEV - (lev)))
 
-void mark_for_init(struct buddy_allocator *a, phys_t start, phys_t end, bool available) {
+static void mark_for_init(struct buddy_allocator *a, phys_t start, phys_t end, bool available) {
     #ifdef BUDDY_DEBUG
     printf("reserve_for_init %p..%p\n", start, end);
     #endif
@@ -88,7 +88,7 @@ void mark_for_init(struct buddy_allocator *a, phys_t start, phys_t end, bool ava
     }
 }
 
-bool try_merge_one(struct buddy_allocator *a, int lev, int i) {
+static bool try_merge_one(struct buddy_allocator *a, int lev, int i) {
     assert(lies_on_level(lev, i));
     assert(lev >= 0);
     if (lev == 0) {
@@ -107,13 +107,13 @@ bool try_merge_one(struct buddy_allocator *a, int lev, int i) {
     return true;
 }
 
-void try_merge_rec(struct buddy_allocator *a, int lev, int i) {
+static void try_merge_rec(struct buddy_allocator *a, int lev, int i) {
     if (try_merge_one(a, lev, i)) {
         try_merge_rec(a, lev - 1, i / 2);
     }
 }
 
-void print(struct buddy_allocator *a, int lev, int i) {
+static void print(struct buddy_allocator *a, int lev, int i) {
     if (lev >= BUDDY_LEVELS) {
         return;
     }
@@ -172,7 +172,7 @@ void buddy_init(struct buddy_allocator *a, phys_t start) {
 }
 
 
-int get_from_level(struct buddy_allocator *a, int lev) {
+static int get_from_level(struct buddy_allocator *a, int lev) {
     #ifdef BUDDY_DEBUG
     printf("  get_from_level(%d)\n", lev);
     #endif

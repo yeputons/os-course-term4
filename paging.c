@@ -10,14 +10,14 @@
 
 //#define PAGING_DEBUG
 
-phys_t alloc_page_table() {
+static phys_t alloc_page_table() {
     phys_t table = alloc_phys_aligned(TABLE_SIZE);
     assert(table % 4096 == 0);
     memset(va(table), 0, TABLE_SIZE);
     return table;
 }
 
-void map_pages(pte_t *ptes, uint64_t base_offset, uint64_t base_step, uint64_t lin_start, uint64_t lin_end, uint64_t phys_start) {
+static void map_pages(pte_t *ptes, uint64_t base_offset, uint64_t base_step, uint64_t lin_start, uint64_t lin_end, uint64_t phys_start) {
     #ifdef PAGING_DEBUG
     printf("map_pages in directory@%p\n", pa(ptes));
     printf("  directory maps [%012p; %012p); base_step=%llx\n", base_offset, base_offset + ENTRIES_PER_TABLE * base_step, base_step);
@@ -74,7 +74,7 @@ void map_pages(pte_t *ptes, uint64_t base_offset, uint64_t base_step, uint64_t l
     }
 }
 
-void print_table(pte_t *ptes, uint64_t base_offset, uint64_t base_step, int offset) {
+static void print_table(pte_t *ptes, uint64_t base_offset, uint64_t base_step, int offset) {
     for (int i = 0; i < offset; i++) {
         printf(" ");
     }
