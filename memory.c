@@ -3,6 +3,7 @@
 #include "util.h"
 #include "multiboot.h"
 #include "buddy.h"
+#include "paging.h"
 
 struct buddy_allocator first_buddy;
 
@@ -37,7 +38,14 @@ void init_memory(void) {
     }
     printf("Kernel resides [%016p..%016p)\n", text_phys_begin, bss_phys_end);
 
+    printf("Initializing buddy for first 1GB... ");
     buddy_init(&first_buddy, 0);
+    printf("OK\n");
+    buddy_debug_print(&first_buddy);
+
+    printf("Initializing paging... ");
+    init_paging();
+    printf("OK\n");
 }
 
 phys_t alloc_phys_aligned(size_t size) {
