@@ -63,8 +63,15 @@ void mark_for_init(struct buddy_allocator *a, phys_t start, phys_t end, bool ava
     if (start >= end) {
         return;
     }
-    start = (start - a->start) / MIN_PAGE_SIZE;
-    end = (end - a->start + MIN_PAGE_SIZE - 1) / MIN_PAGE_SIZE;
+    if (!available) {
+        // extending segment until aligned
+        start = (start - a->start) / MIN_PAGE_SIZE;
+        end = (end - a->start + MIN_PAGE_SIZE - 1) / MIN_PAGE_SIZE;
+    } else {
+        // shrinking segment until aligned
+        start = (start - a->start + MIN_PAGE_SIZE - 1) / MIN_PAGE_SIZE;
+        end = (end - a->start) / MIN_PAGE_SIZE;
+    }
     if (start >= end) {
         return;
     }
