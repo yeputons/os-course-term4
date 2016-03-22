@@ -5,7 +5,7 @@
 #include "memory.h"
 
 #define BUDDY_LEVELS (30 - 12 + 1) // max is 1GB page, min is 4KB page
-#define BUDDIES_CNT (1 << BUDDY_LEVELS)
+#define BUDDIES_CNT (1 << (BUDDY_LEVELS + 1))
 
 struct buddy_info {
     int prev_free:(BUDDY_LEVELS + 2); // 2**(BUDDY_LEVELS+1) nodes in total, plus one sign bit

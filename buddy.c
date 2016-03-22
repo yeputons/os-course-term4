@@ -5,7 +5,7 @@
 #include "multiboot.h"
 
 #define MIN_PAGE_SIZE 4096
-#define MAX_PAGE_SIZE ((long long)MIN_PAGE_SIZE << BUDDY_LEVELS)
+#define MAX_PAGE_SIZE ((long long)MIN_PAGE_SIZE << (BUDDY_LEVELS - 1))
 
 //#define BUDDY_DEBUG
 
