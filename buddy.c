@@ -3,8 +3,8 @@
 #include "printf.h"
 #include "util.h"
 
-#define MIN_PAGE_SIZE 4096
-#define MAX_PAGE_SIZE ((long long)MIN_PAGE_SIZE << (BUDDY_LEVELS - 1))
+#define MIN_PAGE_SIZE ((buddy_size_t)4096)
+#define MAX_PAGE_SIZE (MIN_PAGE_SIZE << (BUDDY_LEVELS - 1))
 
 //#define BUDDY_DEBUG
 
@@ -59,7 +59,7 @@ static void remove_one(struct buddy_allocator *a, int lev, int i) {
 
 // Used in initialization for marking consecutive segments on the last level as available/unavailable
 // Should not be run after initialization as it works with the last level only
-static void mark_for_init(struct buddy_allocator *a, phys_t start, phys_t end, bool available) {
+static void mark_for_init(struct buddy_allocator *a, buddy_ptr_t start, buddy_ptr_t end, bool available) {
     dbg("%sreserve_for_init %p..%p\n", available ? "un" : "", start, end);
     if (a->start > start) {
         start = a->start;
@@ -127,8 +127,8 @@ static void print(struct buddy_allocator *a, int lev, int i) {
     assert(lies_on_level(lev, i));
     
     if (a->buddies[i].is_free) {
-        uint64_t buddy_size = buddy_size(lev);
-        uint64_t buddy_id = i - (1 << lev);
+        buddy_size_t buddy_size = buddy_size(lev);
+        int buddy_id = i - (1 << lev);
         printf("%5d@%2d: [%p..%p); prev=%d, next=%d\n", i, lev, a->start + buddy_id * buddy_size, a->start + (buddy_id + 1) * buddy_size, a->buddies[i].prev_free, a->buddies[i].next_free);
     } else {
         assert(a->buddies[i].prev_free == -1);
@@ -145,7 +145,7 @@ void buddy_debug_print(struct buddy_allocator *a) {
 extern char text_phys_begin[];
 extern char bss_phys_end[];
 
-void buddy_init(struct buddy_allocator *a, phys_t start, size_t init_ops_cnt, struct buddy_init_operation *ops) {
+void buddy_init(struct buddy_allocator *a, buddy_ptr_t start, size_t init_ops_cnt, struct buddy_init_operation *ops) {
     a->start = start;
     assert(a->start < (1LL << 48));
     assert(a->start % MAX_PAGE_SIZE == 0);
@@ -193,10 +193,10 @@ static int get_from_level(struct buddy_allocator *a, int lev) {
     return 2 * parent;
 }
 
-phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
+buddy_ptr_t buddy_alloc(struct buddy_allocator *a, buddy_size_t size) {
     assert(1 <= size && size <= MAX_PAGE_SIZE);
     int lev = LAST_LEV;
-    while (buddy_size(lev) < (int)size) {
+    while (buddy_size(lev) < size) {
         lev--;
         assert(lev >= 0);
     }
@@ -211,11 +211,11 @@ phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
     dbg("  marked child %d with lev=%d\n", child, lev);
 
     result -= 1 << lev;
-    return a->start + (uint64_t)result * buddy_size(lev);
+    return a->start + result * buddy_size(lev);
 }
 
 // Returns start of block which contains 'ptr'
-phys_t buddy_get_block_start(struct buddy_allocator *a, phys_t ptr) {
+buddy_ptr_t buddy_get_block_start(struct buddy_allocator *a, buddy_ptr_t ptr) {
     assert(a->start <= ptr && ptr < a->start + MAX_PAGE_SIZE);
 
     int i = (ptr - a->start) / MIN_PAGE_SIZE + LAST_LEV_START;
@@ -227,7 +227,7 @@ phys_t buddy_get_block_start(struct buddy_allocator *a, phys_t ptr) {
         if (a->buddies[child].allocated_level != BUDDY_LEVELS) {
             assert(a->buddies[child].allocated_level <= lev);
             child -= 1 << LAST_LEV;
-            return a->start + (uint64_t)child * MIN_PAGE_SIZE;
+            return a->start + child * MIN_PAGE_SIZE;
         }
         i /= 2;
         lev--;
@@ -235,7 +235,7 @@ phys_t buddy_get_block_start(struct buddy_allocator *a, phys_t ptr) {
     }
 }
 
-void buddy_free(struct buddy_allocator *a, phys_t ptr) {
+void buddy_free(struct buddy_allocator *a, buddy_ptr_t ptr) {
     assert(a->start <= ptr && ptr < a->start + MAX_PAGE_SIZE);
     assert((ptr - a->start) % MIN_PAGE_SIZE == 0);
 
