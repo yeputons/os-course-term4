@@ -20,7 +20,14 @@ struct buddy_allocator {
     int firsts[BUDDY_LEVELS];
 };
 
-void buddy_init(struct buddy_allocator *a, phys_t start);
+#define BUDDY_INIT_RESERVE_SEGMENT 1
+#define BUDDY_INIT_MAKE_SEGMENT_AVAILABLE 2
+struct buddy_init_operation {
+    char operation;
+	phys_t start, end;
+};
+
+void buddy_init(struct buddy_allocator *a, phys_t start, size_t init_ops_cnt, struct buddy_init_operation *ops);
 void buddy_debug_print(struct buddy_allocator *a);
 
 phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size);

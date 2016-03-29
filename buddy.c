@@ -2,7 +2,6 @@
 #include "buddy.h"
 #include "printf.h"
 #include "util.h"
-#include "multiboot.h"
 
 #define MIN_PAGE_SIZE 4096
 #define MAX_PAGE_SIZE ((long long)MIN_PAGE_SIZE << (BUDDY_LEVELS - 1))
@@ -61,7 +60,7 @@ static void remove_one(struct buddy_allocator *a, int lev, int i) {
 // Used in initialization for marking consecutive segments on the last level as available/unavailable
 // Should not be run after initialization as it works with the last level only
 static void mark_for_init(struct buddy_allocator *a, phys_t start, phys_t end, bool available) {
-    dbg("reserve_for_init %p..%p\n", start, end);
+    dbg("%sreserve_for_init %p..%p\n", available ? "un" : "", start, end);
     if (a->start > start) {
         start = a->start;
     }
@@ -146,7 +145,7 @@ void buddy_debug_print(struct buddy_allocator *a) {
 extern char text_phys_begin[];
 extern char bss_phys_end[];
 
-void buddy_init(struct buddy_allocator *a, phys_t start) {
+void buddy_init(struct buddy_allocator *a, phys_t start, size_t init_ops_cnt, struct buddy_init_operation *ops) {
     a->start = start;
     assert(a->start < (1LL << 48));
     assert(a->start % MAX_PAGE_SIZE == 0);
@@ -161,16 +160,9 @@ void buddy_init(struct buddy_allocator *a, phys_t start) {
         a->firsts[i] = -1;
     }
 
-    struct mboot_memory_segm *segm = (void*)(uint64_t)mboot_info->mmap_addr;
-    struct mboot_memory_segm *segm_end = (void*)((uint64_t)mboot_info->mmap_addr + mboot_info->mmap_length);
-    while (segm < segm_end) {
-        if (segm->type == 1) {
-            mark_for_init(a, segm->base_addr, segm->base_addr + segm->length, /* available */ true);
-        }
-        segm = (void*)((uint64_t)segm + segm->size + 4);
+    for (size_t i = 0; i < init_ops_cnt; i++) {
+        mark_for_init(a, ops[i].start, ops[i].end, ops[i].operation == BUDDY_INIT_MAKE_SEGMENT_AVAILABLE);
     }
-    mark_for_init(a, 0, 1024 * 1024, /* available */ false);
-    mark_for_init(a, (phys_t)text_phys_begin, (phys_t)bss_phys_end, /* available */ false);
 
     // Initialization is completed, now we can merge available segments into bigger
     for (int lev = LAST_LEV; lev >= 0; lev--) {

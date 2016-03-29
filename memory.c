@@ -20,9 +20,21 @@ void init_memory(void) {
 
     phys_mem_end = 0;
     uint32_t pos = 0;
+
+    #define MAX_INIT_OPS 64
+    static struct buddy_init_operation ops[MAX_INIT_OPS];
+    int init_ops = 0;
     while (pos < mboot_info->mmap_length) {
         struct mboot_memory_segm *segm = (void*)(uint64_t)(mboot_info->mmap_addr + pos);
         printf("Memory segment [%016p..%016p) is %s\n", segm->base_addr, segm->base_addr + segm->length, segm->type == 1 ? "available" : "unavailable");
+
+        if (segm->type == 1) {
+            assert(init_ops < MAX_INIT_OPS);
+            ops[init_ops].operation = BUDDY_INIT_MAKE_SEGMENT_AVAILABLE;
+            ops[init_ops].start = segm->base_addr;
+            ops[init_ops].end = segm->base_addr + segm->length;
+            init_ops++;
+        }
 
         uint64_t end = segm->base_addr + segm->length;
         if (end > phys_mem_end) {
@@ -39,8 +51,19 @@ void init_memory(void) {
     }
     printf("Kernel resides [%016p..%016p)\n", text_phys_begin, bss_phys_end);
 
+    assert(init_ops < MAX_INIT_OPS);
+    ops[init_ops].operation = BUDDY_INIT_RESERVE_SEGMENT;
+    ops[init_ops].start = (uint64_t)text_phys_begin;
+    ops[init_ops].end = (uint64_t)bss_phys_end;
+    init_ops++;
+    assert(init_ops < MAX_INIT_OPS);
+    ops[init_ops].operation = BUDDY_INIT_RESERVE_SEGMENT;
+    ops[init_ops].start = 0;
+    ops[init_ops].end = 1024 * 1024;
+    init_ops++;
+
     printf("Initializing buddy for first 1GB... ");
-    buddy_init(&first_buddy, 0);
+    buddy_init(&first_buddy, 0, init_ops, ops);
     printf("OK\n");
     buddy_debug_print(&first_buddy);
     printf("\n");
