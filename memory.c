@@ -22,7 +22,7 @@ void init_memory(void) {
     uint32_t pos = 0;
     while (pos < mboot_info->mmap_length) {
         struct mboot_memory_segm *segm = (void*)(uint64_t)(mboot_info->mmap_addr + pos);
-        printf("Memory segment [%016p..%016p) is %s\n", segm->base_addr, segm->base_addr + segm->length - 1, segm->type == 1 ? "available" : "unavailable");
+        printf("Memory segment [%016p..%016p) is %s\n", segm->base_addr, segm->base_addr + segm->length, segm->type == 1 ? "available" : "unavailable");
 
         uint64_t end = segm->base_addr + segm->length;
         if (end > phys_mem_end) {
