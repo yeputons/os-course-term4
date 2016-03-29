@@ -6,6 +6,8 @@
 #include "paging.h"
 #include "slab.h"
 
+extern struct multiboot_info *mboot_info;
+
 struct buddy_allocator first_buddy;
 
 extern char text_phys_begin[];
@@ -25,25 +27,25 @@ void init_memory(void) {
     static struct buddy_init_operation ops[MAX_INIT_OPS];
     int init_ops = 0;
     while (pos < mboot_info->mmap_length) {
-        struct mboot_memory_segm *segm = (void*)(uint64_t)(mboot_info->mmap_addr + pos);
-        printf("Memory segment [%016p..%016p) is %s\n", segm->base_addr, segm->base_addr + segm->length, segm->type == 1 ? "available" : "unavailable");
+        struct multiboot_mmap_entry *segm = (void*)(uint64_t)(mboot_info->mmap_addr + pos);
+        printf("Memory segment [%016p..%016p) is %s\n", segm->addr, segm->addr + segm->len, segm->type == MULTIBOOT_MEMORY_AVAILABLE ? "available" : "unavailable");
 
-        if (segm->type == 1) {
+        if (segm->type == MULTIBOOT_MEMORY_AVAILABLE) {
             assert(init_ops < MAX_INIT_OPS);
             ops[init_ops].operation = BUDDY_INIT_MAKE_SEGMENT_AVAILABLE;
-            ops[init_ops].start = segm->base_addr;
-            ops[init_ops].end = segm->base_addr + segm->length;
+            ops[init_ops].start = segm->addr;
+            ops[init_ops].end = segm->addr + segm->len;
             init_ops++;
         }
 
-        uint64_t end = segm->base_addr + segm->length;
+        uint64_t end = segm->addr + segm->len;
         if (end > phys_mem_end) {
             phys_mem_end = end;
         }
         pos += segm->size + 4;
     }
     
-    if ((uint64_t)mboot_info + sizeof(struct mboot_info) > 1024 * 1024) {
+    if ((uint64_t)mboot_info + sizeof(struct multiboot_info) > 1024 * 1024) {
         die("mboot_info ends in upper memory");
     }
     if (mboot_info->mmap_addr + mboot_info->mmap_length > 1024 * 1024) {
