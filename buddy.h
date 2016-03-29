@@ -8,8 +8,8 @@
 #define BUDDIES_CNT (1 << (BUDDY_LEVELS + 1))
 
 struct buddy_info {
-    int prev_free:(BUDDY_LEVELS + 2); // 2**(BUDDY_LEVELS+1) nodes in total, plus one sign bit
-    int next_free:(BUDDY_LEVELS + 2);
+    int prev_free;
+    int next_free;
     unsigned is_free:1;
     unsigned allocated_level:5;
 };
