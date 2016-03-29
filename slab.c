@@ -23,15 +23,19 @@ struct slab {
 
 #define SLAB_DEBUG
 
+#ifdef SLAB_DEBUG
+#define dbg(...) printf(__VA_ARGS__)
+#else
+#define dbg(...)
+#endif
+
 // ========== INDIVIDUAL SLABS ==========
 #define MIN_SLAB_NODES 10
 #define align_by(x, align) (((x) + (align) - 1) / (align) * (align))
 
 // Given size of item and required alignment calculates parameters of a single slab
 static void calculate_slab(size_t item_size, size_t align, size_t *out_slab_nodes_start, int *out_nodes, size_t *out_alloc_mem) {
-    #ifdef SLAB_DEBUG
-    printf("get_slab_size(item_size=%zd, align=%zd)\n", item_size, align);
-    #endif
+    dbg("get_slab_size(item_size=%zd, align=%zd)\n", item_size, align);
     assert(item_size > 0 && align >= 1);
     assert((align & (align - 1)) == 0);
     assert(item_size % align == 0);
@@ -57,11 +61,8 @@ static void calculate_slab(size_t item_size, size_t align, size_t *out_slab_node
     size_t header = sizeof(struct slab) + nodes * sizeof(struct slab_node);
     size_t nodes_start = align_by(header, align);
 
-    #ifdef SLAB_DEBUG
-    size_t utilized = header + per_node * nodes;
-    printf("  Allocate space for %d nodes per slab, header size is %d\n"
-            "  first node is at %d, utilized memory is %d/%d\n", nodes, header, nodes_start, utilized, alloc_mem);
-    #endif
+    dbg("  Allocate space for %d nodes per slab, header size is %d\n"
+        "  first node is at %d, utilized memory is %d/%d\n", nodes, header, nodes_start, header + per_node * nodes, alloc_mem);
     assert(nodes_start + nodes * item_size <= alloc_mem);
     
     *out_slab_nodes_start = nodes_start;
@@ -129,24 +130,16 @@ void slab_allocator_init(struct slab_allocator* a, size_t item_size, size_t alig
 }
 
 void* slab_allocator_alloc(struct slab_allocator *a) {
-    #ifdef SLAB_DEBUG
-    printf("slab_allocator_alloc()\n");
-    #endif
+    dbg("slab_allocator_alloc()\n");
     if (!a->partials) {
         a->partials = slab_create(a);
-        #ifdef SLAB_DEBUG
-        printf("  Create new empty slab@%p\n", a->partials);
-        #endif
+        dbg("  Create new empty slab@%p\n", a->partials);
     }
     struct slab* s = a->partials;
     void* result = slab_alloc(a, s);
-    #ifdef SLAB_DEBUG
-    printf("  Slab@%p allocated %p\n", s, result);
-    #endif
+    dbg("  Slab@%p allocated %p\n", s, result);
     if (s->allocated == a->slab_nodes) {
-        #ifdef SLAB_DEBUG
-        printf("  Move slab@%p from partials to fulls\n", s);
-        #endif
+        dbg("  Move slab@%p from partials to fulls\n", s);
         // move from partials to fulls
         a->partials = s->next_slab;
         if (a->partials) {
@@ -162,19 +155,13 @@ void* slab_allocator_alloc(struct slab_allocator *a) {
 }
 
 void slab_allocator_free(struct slab_allocator *a, void *ptr) {
-    #ifdef SLAB_DEBUG
-    printf("slab_allocator_free()\n");
-    #endif
+    dbg("slab_allocator_free()\n");
     struct slab* s = va(get_big_phys_aligned_block_start(pa(ptr)));
-    #ifdef SLAB_DEBUG
-    printf("  Pointer %p lies in slab@%p\n", ptr, s);
-    #endif
+    dbg("  Pointer %p lies in slab@%p\n", ptr, s);
     bool was_full = s->allocated == a->slab_nodes;
     slab_free(a, s, ptr);
     if (was_full) {
-        #ifdef SLAB_DEBUG
-        printf("  Adding slab back to partials\n");
-        #endif
+        dbg("  Adding slab back to partials\n");
         // move from fulls to partials
         a->fulls_cnt--;
         s->prev_slab = NULL;
@@ -186,9 +173,7 @@ void slab_allocator_free(struct slab_allocator *a, void *ptr) {
         a->partials = s;
     }
     if (s->allocated == 0) {
-        #ifdef SLAB_DEBUG
-        printf("  Slab become empty, removing\n");
-        #endif
+        dbg("  Slab become empty, removing\n");
         // remove
         struct slab* p = s->prev_slab, *n = s->next_slab;
         if (p) {
