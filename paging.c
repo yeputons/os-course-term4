@@ -106,5 +106,4 @@ void init_paging() {
     map_pages(pml4, 0, PML4_STEP, linear(KERNEL_BASE), linear(KERNEL_BASE) + 2LL * 1024 * 1024 * 1024, 0);
     //print_table(pml4, 0, PML4_STEP, 0);
     store_pml4(pa(pml4));
-    flush_tlb();
 }
