@@ -9,6 +9,12 @@
 
 //#define BUDDY_DEBUG
 
+#ifdef BUDDY_DEBUG
+#define dbg(...) printf(__VA_ARGS__)
+#else
+#define dbg(...)
+#endif
+
 // Marks single element as free and adds it to linked list
 static void add_one(struct buddy_allocator *a, int lev, int i) {
     assert(!a->buddies[i].is_free);
@@ -55,9 +61,7 @@ static void remove_one(struct buddy_allocator *a, int lev, int i) {
 // Used in initialization for marking consecutive segments on the last level as available/unavailable
 // Should not be run after initialization as it works with the last level only
 static void mark_for_init(struct buddy_allocator *a, phys_t start, phys_t end, bool available) {
-    #ifdef BUDDY_DEBUG
-    printf("reserve_for_init %p..%p\n", start, end);
-    #endif
+    dbg("reserve_for_init %p..%p\n", start, end);
     if (a->start > start) {
         start = a->start;
     }
@@ -180,27 +184,19 @@ void buddy_init(struct buddy_allocator *a, phys_t start) {
 
 // Tries to retrieve a block from level 'lev', splitting bigger blocks if needed
 static int get_from_level(struct buddy_allocator *a, int lev) {
-    #ifdef BUDDY_DEBUG
-    printf("  get_from_level(%d)\n", lev);
-    #endif
+    dbg("  get_from_level(%d)\n", lev);
     if (a->firsts[lev] >= 0) {
         int result = a->firsts[lev];
         remove_one(a, lev, result);
-        #ifdef BUDDY_DEBUG
-        printf("  returning %d\n", result);
-        #endif
+        dbg("  returning %d\n", result);
         return result;
     }
     if (lev == 0) {
         die("Buddy allocator is unable to find memory");
     }
-    #ifdef BUDDY_DEBUG
-    printf("  going to parent\n");
-    #endif
+    dbg("  going to parent\n");
     int parent = get_from_level(a, lev - 1);
-    #ifdef BUDDY_DEBUG
-    printf("  received %d, putting back %d, returning %d\n", parent, 2 * parent + 1, 2 * parent);
-    #endif
+    dbg("  received %d, putting back %d, returning %d\n", parent, 2 * parent + 1, 2 * parent);
     add_one(a, lev, 2 * parent + 1);
     return 2 * parent;
 }
@@ -212,9 +208,7 @@ phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
         lev--;
         assert(lev >= 0);
     }
-    #ifdef BUDDY_DEBUG
-    printf("buddy_alloc: size=%lld, lev=%d\n", size, lev);
-    #endif
+    dbg("buddy_alloc: size=%lld, lev=%d\n", size, lev);
     int result = get_from_level(a, lev);
     assert(lies_on_level(lev, result));
 
@@ -222,9 +216,7 @@ phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
     assert(lies_on_level(LAST_LEV, child));
     assert(a->buddies[child].allocated_level == BUDDY_LEVELS);
     a->buddies[child].allocated_level = lev;
-    #ifdef BUDDY_DEBUG
-    printf("  marked child %d with lev=%d\n", child, lev);
-    #endif
+    dbg("  marked child %d with lev=%d\n", child, lev);
 
     result -= 1 << lev;
     return a->start + (uint64_t)result * buddy_size(lev);
@@ -256,16 +248,12 @@ void buddy_free(struct buddy_allocator *a, phys_t ptr) {
     assert((ptr - a->start) % MIN_PAGE_SIZE == 0);
 
     int child = (ptr - a->start) / MIN_PAGE_SIZE + LAST_LEV_START;
-    #ifdef BUDDY_DEBUG
-    printf("buddy_free: ptr=%p; child=%d\n", ptr, child);
-    #endif
+    dbg("buddy_free: ptr=%p; child=%d\n", ptr, child);
     assert(lies_on_level(LAST_LEV, child));
     int lev = a->buddies[child].allocated_level;
     assert(lev < BUDDY_LEVELS);
     a->buddies[child].allocated_level = BUDDY_LEVELS;
-    #ifdef BUDDY_DEBUG
-    printf("  lev=%d, size=%d\n", lev, MIN_PAGE_SIZE << lev);
-    #endif
+    dbg("  lev=%d, size=%d\n", lev, MIN_PAGE_SIZE << lev);
 
     ptr -= a->start;
     assert(ptr % buddy_size(lev) == 0);
