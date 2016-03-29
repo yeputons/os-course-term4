@@ -13,7 +13,7 @@ struct buddy_allocator first_buddy;
 extern char text_phys_begin[];
 extern char bss_phys_end[];
 
-uint64_t phys_mem_end;
+phys_t phys_mem_end;
 
 void init_memory(void) {
     if (!(mboot_info->flags & (1 << 6))) {
@@ -38,7 +38,7 @@ void init_memory(void) {
             init_ops++;
         }
 
-        uint64_t end = segm->addr + segm->len;
+        phys_t end = segm->addr + segm->len;
         if (end > phys_mem_end) {
             phys_mem_end = end;
         }
