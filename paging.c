@@ -10,6 +10,12 @@
 
 //#define PAGING_DEBUG
 
+#ifdef PAGING_DEBUG
+#define dbg(...) printf(__VA_ARGS__)
+#else
+#define dbg(...)
+#endif
+
 static phys_t alloc_page_table() {
     phys_t table = alloc_big_phys_aligned(TABLE_SIZE);
     assert(table % 4096 == 0);
@@ -18,11 +24,9 @@ static phys_t alloc_page_table() {
 }
 
 static void map_pages(pte_t *ptes, uint64_t base_offset, uint64_t base_step, uint64_t lin_start, uint64_t lin_end, uint64_t phys_start) {
-    #ifdef PAGING_DEBUG
-    printf("map_pages in directory@%p\n", pa(ptes));
-    printf("  directory maps [%012p; %012p); base_step=%llx\n", base_offset, base_offset + ENTRIES_PER_TABLE * base_step, base_step);
-    printf("  want to map    [%012p; %012p) to physical starting at %p\n", lin_start, lin_end, phys_start);
-    #endif
+    dbg("map_pages in directory@%p\n", pa(ptes));
+    dbg("  directory maps [%012p; %012p); base_step=%llx\n", base_offset, base_offset + ENTRIES_PER_TABLE * base_step, base_step);
+    dbg("  want to map    [%012p; %012p) to physical starting at %p\n", lin_start, lin_end, phys_start);
     assert(lin_start < lin_end);
     assert(base_offset % base_step == 0);
     if (lin_start < base_offset) {
@@ -42,15 +46,13 @@ static void map_pages(pte_t *ptes, uint64_t base_offset, uint64_t base_step, uin
     assert(0 <= entry_start && entry_start < entry_end && entry_end <= ENTRIES_PER_TABLE);
     
     bool can_fully_allocate = base_step == 4096 || base_step == 2 * 1024 * 1024;
-    #ifdef PAGING_DEBUG
-    printf("  update entries [%d; %d)\n", entry_start, entry_end);
-    #endif
+    dbg("  update entries [%d; %d)\n", entry_start, entry_end);
     for (int i = entry_start; i < entry_end; i++) {
         uint64_t cur_start = base_offset + i * base_step;
         uint64_t cur_end = base_offset + (i + 1) * base_step;
         assert(!(lin_end <= cur_start || cur_end <= lin_start));
         if (ptes[i]) {
-            printf("  entry %d exists: %x\n", i, ptes[i]);
+            dbg("  entry %d exists: %x\n", i, ptes[i]);
         }
         if (can_fully_allocate && lin_start <= cur_start && cur_end <= lin_end) {
             assert(!pte_present(ptes[i]));
