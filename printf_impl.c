@@ -7,13 +7,22 @@
         i++;
         
         char left_pad = ' ';
-        if (format[i] == '0') { left_pad = '0'; i++; }
+        bool left_pad_specified = false;
+        if (format[i] == '0') {
+            left_pad_specified = true;
+            left_pad = '0';
+            i++;
+        }
+
         int width = 0;
+        bool width_specified = false;
         if (format[i] == '*') {
             width = va_arg(args, int);
             i++;
+            width_specified = true;
         } else {
             while (format[i] >= '0' && format[i] <= '9') {
+                width_specified = true;
                 width = width * 10 + format[i] - '0';
                 i++;
             }
@@ -83,6 +92,12 @@
                     else             data = va_arg(args, unsigned int);
                 } else if (spec == 'p') {
                     data = (uint64_t) va_arg(args, void*);
+                    if (!width_specified) {
+                        width = 16;
+                    }
+                    if (!left_pad_specified) {
+                        left_pad = '0';
+                    }
                 }
                 char sign = 0;
                 if (spec == 'd' || spec == 'i') {

@@ -3,6 +3,7 @@
 #include "util.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 int printf(const char *format, ...) {
     va_list args;
