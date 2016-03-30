@@ -4,6 +4,7 @@
 #include "pic.h"
 #include "util.h"
 #include "memory.h"
+#include "threading.h"
 
 int timer_step;
 
@@ -23,6 +24,21 @@ void fault_handler(struct interrupt_info *info) {
 	dump( r8); dump( r9); dump(r10); dump(r11);
 	dump(r12); dump(r13); dump(r14); dump(r15);
 	die("");
+}
+
+void thread_1(void* arg) {
+    for (int i = 0;; i++) {
+        printf("thread_1(%d, %p)\n", i, arg);
+        yield();
+    }
+}
+
+void thread_2(void *arg) {
+    long long count = (long long)arg;
+    for (int i = 0; i < count; i++) {
+        printf("thread_2(%d, %p)\n", i, arg);
+        yield();
+    }
 }
 
 void main(void) {
@@ -46,5 +62,12 @@ void main(void) {
     printf("OK\n");
 
     init_memory();
-    for(;;);
+
+    init_threading();
+    create_thread(thread_1, (void*)0x1234);
+    create_thread(thread_2, (void*)300);
+    for (int i = 0;; i++) {
+        printf("main thread %d\n", i);
+        yield();
+    }
 }
