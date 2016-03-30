@@ -27,15 +27,15 @@ mboot_header:
 
 	.align 4
 gdt:
-        .quad 0x0000000000000000
-        .quad 0x00cf9a000000ffff
-        .quad 0x00cf92000000ffff
-        .quad 0x00a09a0000000000
-        .quad 0x00a0920000000000
-        .quad 0x00a0fa0000000000
-        .quad 0x00a0f20000000000
-        .quad 0x0000000000000000 // reserve for TSS
-        .quad 0x0000000000000000
+	.quad 0x0000000000000000
+	.quad 0x00cf9a000000ffff
+	.quad 0x00cf92000000ffff
+	.quad 0x00a09a0000000000
+	.quad 0x00a0920000000000
+	.quad 0x00a0fa0000000000
+	.quad 0x00a0f20000000000
+	.quad 0x0000000000000000 // reserve for TSS
+	.quad 0x0000000000000000
 gdt_ptr:
 	.word (gdt_ptr - gdt - 1)
 	.quad gdt
