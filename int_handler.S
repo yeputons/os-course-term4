@@ -17,6 +17,7 @@
 int_handler_common:
 	// assumes that error code and interrupt id are already pushed
 	// interrupt id is on the top
+	push %rsp
 	push %rax
 	push %rbx
 	push %rcx
@@ -24,7 +25,6 @@ int_handler_common:
 	push %rdi
 	push %rsi
 	push %rbp
-	push %rsp
 	push %r8
 	push %r9
 	push %r10
@@ -44,7 +44,6 @@ int_handler_common:
 	pop %r10
 	pop %r9
 	pop %r8
-	pop %rsp
 	pop %rbp
 	pop %rsi
 	pop %rdi
@@ -52,6 +51,7 @@ int_handler_common:
 	pop %rcx
 	pop %rbx
 	pop %rax
+	pop %rsp
 	add $16, %rsp // get rid of error code and interrupt it
 	iretq
 

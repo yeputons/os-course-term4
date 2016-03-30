@@ -15,7 +15,7 @@ void init_idt(void);
 
 struct interrupt_info {
     uint64_t r15, r14, r13, r12, r11, r10, r9, r8;
-    uint64_t rsp, rbp, rsi, rdi, rdx, rcx, rbx, rax;
+    uint64_t rbp, rsi, rdi, rdx, rcx, rbx, rax, rsp;
     uint64_t interrupt_id, error_code;
     uint64_t rip, cs, rflags;
 } __attribute__((packed));
