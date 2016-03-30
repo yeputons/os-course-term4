@@ -28,7 +28,7 @@ void init_memory(void) {
     int init_ops = 0;
     while (pos < mboot_info->mmap_length) {
         struct multiboot_mmap_entry *segm = (void*)(uint64_t)(mboot_info->mmap_addr + pos);
-        printf("Memory segment [%016p..%016p) is %s\n", segm->addr, segm->addr + segm->len, segm->type == MULTIBOOT_MEMORY_AVAILABLE ? "available" : "unavailable");
+        printf("Memory segment [%012llx..%012llx) is %s\n", segm->addr, segm->addr + segm->len, segm->type == MULTIBOOT_MEMORY_AVAILABLE ? "available" : "unavailable");
 
         if (segm->type == MULTIBOOT_MEMORY_AVAILABLE) {
             assert(init_ops < MAX_INIT_OPS);
@@ -51,7 +51,7 @@ void init_memory(void) {
     if (mboot_info->mmap_addr + mboot_info->mmap_length > 1024 * 1024) {
         die("mboot_info->mmap ends in upper memory");
     }
-    printf("Kernel resides [%016p..%016p)\n", text_phys_begin, bss_phys_end);
+    printf("Kernel resides [%012llx..%012llx)\n", text_phys_begin, bss_phys_end);
 
     assert(init_ops < MAX_INIT_OPS);
     ops[init_ops].operation = BUDDY_INIT_RESERVE_SEGMENT;

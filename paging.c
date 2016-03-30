@@ -24,9 +24,9 @@ static phys_t alloc_page_table() {
 }
 
 static void map_pages(pte_t *ptes, uint64_t base_offset, uint64_t base_step, uint64_t lin_start, uint64_t lin_end, uint64_t phys_start) {
-    dbg("map_pages in directory@%p\n", pa(ptes));
-    dbg("  directory maps [%012p; %012p); base_step=%llx\n", base_offset, base_offset + ENTRIES_PER_TABLE * base_step, base_step);
-    dbg("  want to map    [%012p; %012p) to physical starting at %p\n", lin_start, lin_end, phys_start);
+    dbg("map_pages in directory@%012llx\n", pa(ptes));
+    dbg("  directory maps [%012llx; %012llx); base_step=%llx\n", base_offset, base_offset + ENTRIES_PER_TABLE * base_step, base_step);
+    dbg("  want to map    [%012llx; %012llx) to physical starting at %012x\n", lin_start, lin_end, phys_start);
     assert(lin_start < lin_end);
     assert(base_offset % base_step == 0);
     if (lin_start < base_offset) {
@@ -52,7 +52,7 @@ static void map_pages(pte_t *ptes, uint64_t base_offset, uint64_t base_step, uin
         uint64_t cur_end = base_offset + (i + 1) * base_step;
         assert(!(lin_end <= cur_start || cur_end <= lin_start));
         if (ptes[i]) {
-            dbg("  entry %d exists: %x\n", i, ptes[i]);
+            dbg("  entry %d exists: %llx\n", i, ptes[i]);
         }
         if (can_fully_allocate && lin_start <= cur_start && cur_end <= lin_end) {
             assert(!pte_present(ptes[i]));
@@ -80,13 +80,13 @@ static void print_table(pte_t *ptes, uint64_t base_offset, uint64_t base_step, i
     for (int i = 0; i < offset; i++) {
         printf(" ");
     }
-    printf("table@%8p for [%012p, %012p) (step is %llx)\n", pa(ptes), base_offset, base_offset + ENTRIES_PER_TABLE * base_step, base_step);
+    printf("table@%8p for [%012llx, %012llx) (step is %llx)\n", pa(ptes), base_offset, base_offset + ENTRIES_PER_TABLE * base_step, base_step);
     for (int i = 0; i < ENTRIES_PER_TABLE; i++) {
         if (pte_present(ptes[i])) {
             for (int i = 0; i < offset; i++) {
                 printf(" ");
             }
-            printf("%d is present: w=%d, u=%d, l=%d, p=%p\n", i, pte_write(ptes[i]), pte_user(ptes[i]), pte_large(ptes[i]), pte_phys(ptes[i]));
+            printf("%d is present: w=%d, u=%d, l=%d, p=%012llx\n", i, pte_write(ptes[i]), pte_user(ptes[i]), pte_large(ptes[i]), pte_phys(ptes[i]));
             if (base_step > 4096 && !pte_large(ptes[i])) {
                 print_table(va(pte_phys(ptes[i])), base_offset + base_step * i, base_step / ENTRIES_PER_TABLE, offset + 8);
             }
