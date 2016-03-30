@@ -44,6 +44,9 @@ phys_t alloc_big_phys_aligned(size_t size);
 phys_t get_big_phys_aligned_block_start(phys_t ptr);
 void free_big_phys_aligned(phys_t ptr);
 
+void *valloc(size_t size);
+void vfree(void *ptr);
+
 extern phys_t phys_mem_end;
 
 #endif /*__ASM_FILE__*/
