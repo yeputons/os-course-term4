@@ -2,15 +2,14 @@
 #include "interrupt.h"
 #include "printf.h"
 #include "pic.h"
+#include "pit.h"
 #include "util.h"
 #include "memory.h"
 #include "threading.h"
 
-int timer_step;
-
 void timer(struct interrupt_info *info) {
     send_eoi(info->interrupt_id);
-    printf("Timer! step=%d\n", timer_step++);
+    yield();
 }
 
 void fault_handler(struct interrupt_info *info) {
@@ -29,7 +28,6 @@ void fault_handler(struct interrupt_info *info) {
 void thread_1(void* arg) {
     for (int i = 0;; i++) {
         printf("thread_1(%d, %p)\n", i, arg);
-        yield();
     }
 }
 
@@ -37,7 +35,6 @@ void thread_2(void *arg) {
     long long count = (long long)arg;
     for (int i = 0; i < count; i++) {
         printf("thread_2(%d, %p)\n", i, arg);
-        yield();
     }
 }
 
@@ -63,11 +60,19 @@ void main(void) {
 
     init_memory();
 
+    printf("Initializing threading... \n");
     init_threading();
+    printf("OK\n");
+
+    printf("Starting PIT for preemption... ");
+    set_int_handler(PIT_INTERRUPT, timer);
+    init_pit(1000); // every 1ms
+    pic_unmask(PIT_INTERRUPT);
+    printf("OK\n");
+
     create_thread(thread_1, (void*)0x1234);
     create_thread(thread_2, (void*)300);
     for (int i = 0;; i++) {
         printf("main thread %d\n", i);
-        yield();
     }
 }
