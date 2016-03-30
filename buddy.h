@@ -27,7 +27,7 @@ struct buddy_allocator {
 #define BUDDY_INIT_MAKE_SEGMENT_AVAILABLE 2
 struct buddy_init_operation {
     char operation;
-	buddy_ptr_t start, end;
+    buddy_ptr_t start, end;
 };
 
 void buddy_init(struct buddy_allocator *a, buddy_ptr_t start, size_t init_ops_cnt, struct buddy_init_operation *ops);

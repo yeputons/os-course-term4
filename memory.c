@@ -109,9 +109,9 @@ void free_big_phys_aligned(phys_t ptr) {
 }
 
 void *valloc(size_t size) {
-	return va(alloc_big_phys_aligned(size));
+    return va(alloc_big_phys_aligned(size));
 }
 
 void vfree(void *ptr) {
-	free_big_phys_aligned(pa(ptr));
+    free_big_phys_aligned(pa(ptr));
 }

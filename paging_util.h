@@ -45,9 +45,9 @@ static inline int page_off(virt_t addr)
 
 static inline virt_t canonical(virt_t addr)
 {
-	if ((addr & (1ull << 47)) == 0)
-		return addr;
-	return addr | 0xffff000000000000llu;
+    if ((addr & (1ull << 47)) == 0)
+        return addr;
+    return addr | 0xffff000000000000llu;
 }
 
 static inline virt_t linear(virt_t addr)
@@ -58,10 +58,10 @@ static inline void store_pml4(phys_t pml4)
 
 static inline phys_t load_pml4(void)
 {
-	phys_t pml4;
+    phys_t pml4;
 
-	__asm__ volatile ("movq %%cr3, %0" : "=a"(pml4));
-	return pml4;
+    __asm__ volatile ("movq %%cr3, %0" : "=a"(pml4));
+    return pml4;
 }
 
 static inline void flush_tlb_addr(virt_t addr)

@@ -8,10 +8,10 @@ static inline void out8(unsigned short port, uint8_t data)
 
 static inline uint8_t in8(unsigned short port)
 {
-	uint8_t value;
+    uint8_t value;
 
-	__asm__ volatile("inb %1, %0" : "=a"(value) : "d"(port));
-	return value;
+    __asm__ volatile("inb %1, %0" : "=a"(value) : "d"(port));
+    return value;
 }
 
 static inline void out16(unsigned short port, uint16_t data)
@@ -19,10 +19,10 @@ static inline void out16(unsigned short port, uint16_t data)
 
 static inline uint16_t in16(unsigned short port)
 {
-	uint16_t value;
+    uint16_t value;
 
-	__asm__ volatile("inw %1, %0" : "=a"(value) : "d"(port));
-	return value;
+    __asm__ volatile("inw %1, %0" : "=a"(value) : "d"(port));
+    return value;
 }
 
 static inline void out32(unsigned short port, uint32_t data)
@@ -30,10 +30,10 @@ static inline void out32(unsigned short port, uint32_t data)
 
 static inline uint32_t in32(unsigned short port)
 {
-	uint32_t value;
+    uint32_t value;
 
-	__asm__ volatile("inl %1, %0" : "=a"(value) : "d"(port));
-	return value;
+    __asm__ volatile("inl %1, %0" : "=a"(value) : "d"(port));
+    return value;
 }
 
 #endif /* __IOPORT_H__ */
