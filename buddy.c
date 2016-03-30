@@ -60,7 +60,7 @@ static void remove_one(struct buddy_allocator *a, int lev, int i) {
 // Used in initialization for marking consecutive segments on the last level as available/unavailable
 // Should not be run after initialization as it works with the last level only
 static void mark_for_init(struct buddy_allocator *a, buddy_ptr_t start, buddy_ptr_t end, bool available) {
-    dbg("%sreserve_for_init %p..%p\n", available ? "un" : "", start, end);
+    dbg("%sreserve_for_init %012llx..%012llx\n", available ? "un" : "", start, end);
     if (a->start > start) {
         start = a->start;
     }
@@ -129,7 +129,7 @@ static void print(struct buddy_allocator *a, int lev, int i) {
     if (a->buddies[i].is_free) {
         buddy_size_t buddy_size = buddy_size(lev);
         int buddy_id = i - (1 << lev);
-        printf("%5d@%2d: [%p..%p); prev=%d, next=%d\n", i, lev, a->start + buddy_id * buddy_size, a->start + (buddy_id + 1) * buddy_size, a->buddies[i].prev_free, a->buddies[i].next_free);
+        printf("%5d@%2d: [%012llx..%012llx); prev=%d, next=%d\n", i, lev, a->start + buddy_id * buddy_size, a->start + (buddy_id + 1) * buddy_size, a->buddies[i].prev_free, a->buddies[i].next_free);
     } else {
         assert(a->buddies[i].prev_free == -1);
         assert(a->buddies[i].next_free == -1);
@@ -240,7 +240,7 @@ void buddy_free(struct buddy_allocator *a, buddy_ptr_t ptr) {
     assert((ptr - a->start) % MIN_PAGE_SIZE == 0);
 
     int child = (ptr - a->start) / MIN_PAGE_SIZE + LAST_LEV_START;
-    dbg("buddy_free: ptr=%p; child=%d\n", ptr, child);
+    dbg("buddy_free: ptr=%012llx; child=%d\n", ptr, child);
     assert(lies_on_level(LAST_LEV, child));
     int lev = a->buddies[child].allocated_level;
     assert(lev < BUDDY_LEVELS);
