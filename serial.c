@@ -1,5 +1,6 @@
 #include "ioport.h"
 #include "serial.h"
+#include "threading.h"
 
 #define BASE_PORT 0x3F8
 #define DATA_PORT (BASE_PORT + 0)
@@ -28,14 +29,17 @@ void init_serial(void) {
 }
 
 void putchar(int c) {
+    spin_lock(&serial_lock);
     out8(DATA_PORT, c);
     while (!(in8(STATUS_PORT) & TRANSMIT_OVER_BIT));
+    spin_unlock(&serial_lock);
 }
 
 void puts(char *s) {
+    spin_lock(&serial_lock);
     for (int i = 0; s[i]; i++) {
         putchar(s[i]);
     }
     putchar('\n');
+    spin_unlock(&serial_lock);
 }
-

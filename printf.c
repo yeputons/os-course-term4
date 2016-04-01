@@ -1,6 +1,7 @@
 #include "printf.h"
 #include "serial.h"
 #include "util.h"
+#include "threading.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -15,9 +16,11 @@ int printf(const char *format, ...) {
 
 int vprintf(const char* format, va_list args) {
     int printed = 0;
+    spin_lock(&serial_lock);
     #define addchar(c) { putchar(c); printed++; }
     #include "printf_impl.c"
     #undef addchar
+    spin_unlock(&serial_lock);
     return printed;
 }
 

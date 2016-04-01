@@ -13,8 +13,11 @@ struct slab_allocator threads_alloc;
 
 thread_t current_thread;
 
+spin_lock_t serial_lock;
+
 void init_threading(void) {
     slab_allocator_init(&threads_alloc, sizeof(struct thread_t), 4096);
+    spin_lock_init(&serial_lock);
     current_thread = slab_allocator_alloc(&threads_alloc);
     current_thread->next = current_thread;
 }
@@ -55,4 +58,31 @@ void* switch_thread_switch(void* old_rsp) {
 
 void exit_unclean(void) {
     die("Thread exited without calling exit\n");
+}
+
+void spin_lock_init(spin_lock_t *lock) {
+    lock->locked = 0;
+    lock->owner = NULL;
+}
+
+void spin_lock(spin_lock_t *lock) {
+    uint64_t rflags = get_rflags();
+    __asm__("cli");
+    while (lock->locked && lock->owner != current_thread) {
+        yield();
+    }
+    lock->locked++;
+    lock->owner = current_thread;
+    set_rflags(rflags);
+}
+
+void spin_unlock(spin_lock_t *lock) {
+    uint64_t rflags = get_rflags();
+    __asm__("cli");
+    assert(lock->locked);
+    assert(lock->owner == current_thread);
+    if (!--lock->locked) {
+        lock->owner = NULL;
+    }
+    set_rflags(rflags);
 }
