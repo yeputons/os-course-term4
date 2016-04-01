@@ -3,7 +3,6 @@
 #include "printf.h"
 #include "util.h"
 #include "memory.h"
-#include "buddy.h"
 
 #define ENTRIES_PER_TABLE 512
 #define TABLE_SIZE (sizeof(pte_t) * ENTRIES_PER_TABLE)
