@@ -24,8 +24,7 @@ void thread_entry(void);
 #define THREAD_STACK_SIZE 8192
 thread_t create_thread(void (*entry)(void*), void* arg) {
 
-    uint64_t rflags;
-    __asm__("pushfq\npop %0" : "=g"(rflags));
+    uint64_t rflags = get_rflags();
     rflags &= ~0x000008D5; // clear status bits: CF, PF, AF, ZF, SF, OF
     rflags &= ~(1 << 10); // clear control bit to comply with ABI: DF
     rflags |= 1 << 9; // set IF

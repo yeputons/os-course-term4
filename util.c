@@ -24,3 +24,13 @@ void die(const char *format, ...) {
         __asm__("hlt");
     }
 }
+
+uint64_t get_rflags() {
+    uint64_t rflags;
+    __asm__("pushfq\npop %0" : "=g"(rflags));
+    return rflags;
+}
+
+void set_rflags(uint64_t rflags) {
+    __asm__("push %0\npopfq" :: "g"(rflags));
+}
