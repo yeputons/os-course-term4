@@ -24,6 +24,7 @@ struct thread {
 struct slab_allocator threads_alloc;
 
 LIST_HEAD(running_threads);
+LIST_HEAD(sleeping_threads);
 thread_t current_thread;
 
 spin_lock_t threads_mgmt_lock;
@@ -79,6 +80,9 @@ void* switch_thread_switch(void* old_rsp) {
     if (current_thread->state == THREAD_RUNNING) {
         list_add_tail(&current_thread->list, &running_threads);
     }
+    if (current_thread->state == THREAD_SLEEPING) {
+        list_add_tail(&current_thread->list, &sleeping_threads);
+    }
     current_thread = UNL(list_first(&running_threads));
     list_del(&current_thread->list);
     return current_thread->rsp;
@@ -95,6 +99,25 @@ void thread_exit(void) {
     spin_unlock(&threads_mgmt_lock);
     yield();
     die("Returned from yield() in thread_exit()");
+}
+
+void sleep(void) {
+    spin_lock(&threads_mgmt_lock);
+    log("thread %p is sleeping\n", current_thread);
+    current_thread->state = THREAD_SLEEPING;
+    spin_unlock(&threads_mgmt_lock);
+    yield();
+}
+
+void wake(thread_t t) {
+    spin_lock(&threads_mgmt_lock);
+    if (t->state == THREAD_SLEEPING) {
+        t->state = THREAD_RUNNING;
+        log("waking up thread %p\n", t);
+        list_del(&t->list);
+        list_add_tail(&t->list, &running_threads);
+    }
+    spin_unlock(&threads_mgmt_lock);
 }
 
 void wait(thread_t t) {
