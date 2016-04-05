@@ -25,7 +25,7 @@ void die(const char *format, ...) {
     }
 }
 
-uint64_t get_rflags() {
+uint64_t get_rflags(void) {
     uint64_t rflags;
     __asm__("pushfq\npop %0" : "=g"(rflags));
     return rflags;

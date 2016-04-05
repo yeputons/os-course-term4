@@ -38,7 +38,7 @@ static inline phys_t pa(const void *addr)
 static inline void *va(phys_t addr)
 { return (void *)VA(addr); }
 
-void init_memory();
+void init_memory(void);
 
 phys_t alloc_big_phys_aligned(size_t size);
 phys_t get_big_phys_aligned_block_start(phys_t ptr);

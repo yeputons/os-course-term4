@@ -13,7 +13,7 @@ void init_threading(void);
 thread_t create_thread(void (*entry)(void*), void* arg);
 int get_thread_state(thread_t t);
 void wait(thread_t t);
-void thread_exit();
+void thread_exit(void);
 
 typedef struct {
     int locked;

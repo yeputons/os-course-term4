@@ -15,7 +15,7 @@
 #define dbg(...)
 #endif
 
-static phys_t alloc_page_table() {
+static phys_t alloc_page_table(void) {
     phys_t table = alloc_big_phys_aligned(TABLE_SIZE);
     assert(table % 4096 == 0);
     memset(va(table), 0, TABLE_SIZE);
@@ -99,7 +99,7 @@ void print_pml4(phys_t addr) {
     print_table(va(addr), 0, PML4_STEP, 0);
 }
 
-void init_paging() {
+void init_paging(void) {
     pte_t *pml4 = va(alloc_page_table());
     map_pages(pml4, 0, PML4_STEP, linear(HIGH_BASE), linear(HIGH_BASE) + phys_mem_end, 0);
     map_pages(pml4, 0, PML4_STEP, linear(KERNEL_BASE), linear(KERNEL_BASE) + 2LL * 1024 * 1024 * 1024, 0);

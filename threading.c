@@ -69,7 +69,7 @@ int get_thread_state(thread_t t) {
     return t->state;
 }
 
-void thread_exit() {
+void thread_exit(void) {
     current_thread->state = THREAD_TERMINATED;
     current_thread->prev->next = current_thread->next;
     current_thread->next->prev = current_thread->prev;

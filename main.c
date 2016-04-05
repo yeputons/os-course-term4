@@ -25,7 +25,7 @@ void fault_handler(struct interrupt_info *info) {
 	die("");
 }
 
-void work() {
+void work(void) {
     for (volatile int i = 0; i < (int)(1e5); i++);
 }
 
