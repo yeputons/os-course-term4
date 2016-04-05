@@ -5,6 +5,7 @@
 #include "buddy.h"
 #include "paging.h"
 #include "slab.h"
+#include "threading.h"
 
 extern struct multiboot_info *mboot_info;
 
@@ -96,22 +97,39 @@ void init_memory(void) {
     printf("Done with testing slab\n\n");
 }
 
+spin_lock_t phys_alloc_lock;
+
 phys_t alloc_big_phys_aligned(size_t size) {
-    return buddy_alloc(&first_buddy, size);
+    spin_lock(&phys_alloc_lock);
+    phys_t result = buddy_alloc(&first_buddy, size);
+    spin_unlock(&phys_alloc_lock);
+    return result;
 }
 
 phys_t get_big_phys_aligned_block_start(phys_t ptr) {
-    return buddy_get_block_start(&first_buddy, ptr);
+    spin_lock(&phys_alloc_lock);
+    phys_t result = buddy_get_block_start(&first_buddy, ptr);
+    spin_unlock(&phys_alloc_lock);
+    return result;
 }
 
 void free_big_phys_aligned(phys_t ptr) {
+    spin_lock(&phys_alloc_lock);
     buddy_free(&first_buddy, ptr);
+    spin_unlock(&phys_alloc_lock);
 }
 
+spin_lock_t valloc_lock;
+
 void *valloc(size_t size) {
-    return va(alloc_big_phys_aligned(size));
+    spin_lock(&valloc_lock);
+    void* result = va(alloc_big_phys_aligned(size));
+    spin_unlock(&valloc_lock);
+    return result;
 }
 
 void vfree(void *ptr) {
+    spin_lock(&valloc_lock);
     free_big_phys_aligned(pa(ptr));
+    spin_unlock(&valloc_lock);
 }
