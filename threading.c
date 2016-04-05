@@ -6,7 +6,7 @@
 
 struct thread_t {
     void *rsp;
-    thread_t next;
+    thread_t prev, next;
 };
 
 struct slab_allocator threads_alloc;
@@ -18,6 +18,7 @@ spin_lock_t threads_mgmt_lock;
 void init_threading(void) {
     slab_allocator_init(&threads_alloc, sizeof(struct thread_t), 4096);
     current_thread = slab_allocator_alloc(&threads_alloc);
+    current_thread->prev = current_thread;
     current_thread->next = current_thread;
 }
 
@@ -44,8 +45,10 @@ thread_t create_thread(void (*entry)(void*), void* arg) {
     spin_lock(&threads_mgmt_lock);
     thread_t t = slab_allocator_alloc(&threads_alloc);
     t->rsp = stack;
+    t->prev = current_thread;
     t->next = current_thread->next;
-    current_thread->next = t;
+    t->prev->next = t;
+    t->next->prev = t;
     spin_unlock(&threads_mgmt_lock);
     return t;
 }
