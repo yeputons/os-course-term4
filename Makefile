@@ -12,7 +12,7 @@ ASM := bootstrap.S videomem.S int_handler.S threading_asm.S
 AOBJ:= $(ASM:%.S=$(INTERDIR)/%.o)
 ADEP:= $(ASM:%.S=$(INTERDIR)/%.d)
 
-SRC := main.c serial.c interrupt.c printf.c pic.c pit.c util.c memory.c buddy.c paging.c slab.c threading.c
+SRC := main.c serial.c interrupt.c printf.c pic.c pit.c util.c memory.c buddy.c paging.c slab.c threading.c list.c
 OBJ := $(AOBJ) $(SRC:%.c=$(INTERDIR)/%.o)
 DEP := $(ADEP) $(SRC:%.c=$(INTERDIR)/%.d)
 

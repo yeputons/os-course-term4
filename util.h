@@ -13,4 +13,7 @@ void die(const char *format, ...);
 uint64_t get_rflags(void);
 void set_rflags(uint64_t rflags);
 
+#define CONTAINER_OF(ptr, type, member) \
+        (type *)( (char *)(ptr) - offsetof(type, member) )
+
 #endif
