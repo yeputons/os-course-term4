@@ -34,7 +34,7 @@ void idle_thread(void* arg) {
 }
 
 void init_threading(void) {
-    slab_allocator_init(&threads_alloc, sizeof(struct thread_t), 4096);
+    slab_allocator_init(&threads_alloc, sizeof(struct thread_t), 1);
     current_thread = slab_allocator_alloc(&threads_alloc);
     current_thread->stack_start = 0;
     current_thread->prev = current_thread;
