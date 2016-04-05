@@ -63,6 +63,18 @@ void thread_chain(void *arg) {
     thread_exit();
 }
 
+bool sleeper_stop;
+void thread_sleeper(void *arg) {
+    (void)arg;
+    printf("sleeper started\n");
+    while (!sleeper_stop) {
+        sleep();
+        printf("Woken up!\n");
+    }
+    printf("sleeper stopped\n");
+    thread_exit();
+}
+
 void main(void) {
     __asm__("cli");
     init_serial();
@@ -109,5 +121,16 @@ void main(void) {
 
     printf("Starting chain\n");
     wait(create_thread(thread_chain, (void*)20));
+
+    printf("Starting sleeper");
+    thread_t sleeper = create_thread(thread_sleeper, NULL);
+    for (int i = 0; i < 10; i++) {
+        printf("sending to sleeper %d\n", i);
+        wake(sleeper);
+        yield();
+    }
+    sleeper_stop = true;
+    wake(sleeper);
+    wait(sleeper);
     thread_exit();
 }
