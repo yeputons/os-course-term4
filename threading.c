@@ -18,8 +18,6 @@ spin_lock_t threads_mgmt_lock;
 
 void init_threading(void) {
     slab_allocator_init(&threads_alloc, sizeof(struct thread_t), 4096);
-    spin_lock_init(&serial_lock);
-    spin_lock_init(&threads_mgmt_lock);
     current_thread = slab_allocator_alloc(&threads_alloc);
     current_thread->next = current_thread;
 }
@@ -61,11 +59,6 @@ void* switch_thread_switch(void* old_rsp) {
 
 void exit_unclean(void) {
     die("Thread exited without calling exit\n");
-}
-
-void spin_lock_init(spin_lock_t *lock) {
-    lock->locked = 0;
-    lock->owner = NULL;
 }
 
 void spin_lock(spin_lock_t *lock) {
