@@ -26,12 +26,21 @@ thread_t current_thread;
 
 spin_lock_t threads_mgmt_lock;
 
+void idle_thread(void* arg) {
+    (void)arg;
+    while (true) {
+        yield();
+    }
+}
+
 void init_threading(void) {
     slab_allocator_init(&threads_alloc, sizeof(struct thread_t), 4096);
     current_thread = slab_allocator_alloc(&threads_alloc);
+    current_thread->stack_start = 0;
     current_thread->prev = current_thread;
     current_thread->next = current_thread;
     current_thread->state = THREAD_RUNNING;
+    create_thread(idle_thread, NULL);
 }
 
 void thread_entry(void);
