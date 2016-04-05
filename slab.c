@@ -21,7 +21,7 @@ struct slab {
     struct slab_node nodes[];
 };
 
-#define SLAB_DEBUG
+//#define SLAB_DEBUG
 
 #ifdef SLAB_DEBUG
 #define dbg(...) printf(__VA_ARGS__)
