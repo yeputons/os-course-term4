@@ -17,7 +17,6 @@ struct thread {
     void *rsp;
     thread_t prev, next;
     volatile int state;
-    spin_lock_t wait_lock;
 };
 
 struct slab_allocator threads_alloc;
