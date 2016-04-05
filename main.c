@@ -25,9 +25,14 @@ void fault_handler(struct interrupt_info *info) {
 	die("");
 }
 
+void work() {
+    for (volatile int i = 0; i < (int)(1e5); i++);
+}
+
 void thread_1(void* arg) {
     for (int i = 0;; i++) {
         printf("thread_1(%d, %p)\n", i, arg);
+        work();
     }
 }
 
@@ -35,6 +40,7 @@ void thread_2(void *arg) {
     long long count = (long long)arg;
     for (int i = 0; i < count; i++) {
         printf("thread_2(%d, %p)\n", i, arg);
+        work();
     }
 }
 
@@ -74,5 +80,6 @@ void main(void) {
     create_thread(thread_2, (void*)300);
     for (int i = 0;; i++) {
         printf("main thread %d\n", i);
+        work();
     }
 }
