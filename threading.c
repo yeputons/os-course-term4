@@ -104,6 +104,7 @@ void wait(thread_t t) {
     }
     log("terminated thread %p and freed its stack %p\n", t, t->stack_start);
     vfree(t->stack_start);
+    slab_allocator_free(&threads_alloc, t);
 }
 
 void exit_unclean(void) {
