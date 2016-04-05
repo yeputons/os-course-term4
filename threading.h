@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-typedef struct thread_t *thread_t;
+typedef struct thread *thread_t;
 
 void init_threading(void);
 
