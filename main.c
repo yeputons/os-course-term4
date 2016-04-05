@@ -29,11 +29,14 @@ void work() {
     for (volatile int i = 0; i < (int)(1e5); i++);
 }
 
+volatile bool thread_1_stop;
+
 void thread_1(void* arg) {
-    for (int i = 0;; i++) {
+    for (int i = 0; !thread_1_stop; i++) {
         printf("thread_1(%d, %p)\n", i, arg);
         work();
     }
+    thread_exit();
 }
 
 void thread_2(void *arg) {
@@ -77,10 +80,16 @@ void main(void) {
     pic_unmask(PIT_INTERRUPT);
     printf("OK\n");
 
-    create_thread(thread_1, (void*)0x1234);
-    create_thread(thread_2, (void*)300);
-    for (int i = 0;; i++) {
+    thread_t th1 = create_thread(thread_1, (void*)0x1234);
+    thread_t th2 = create_thread(thread_2, (void*)300);
+    for (int i = 0; get_thread_state(th2) == THREAD_RUNNING; i++) {
         printf("main thread %d\n", i);
         work();
     }
+    wait(th2);
+    printf("Thread2 is terminated\n");
+    thread_1_stop = true;
+    wait(th1);
+    printf("Thread1 is terminated\n");
+    thread_exit();
 }
