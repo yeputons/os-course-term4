@@ -7,7 +7,11 @@ typedef struct thread_t *thread_t;
 
 void init_threading(void);
 
+#define THREAD_RUNNING 1
+#define THREAD_TERMINATED 2
+
 thread_t create_thread(void (*entry)(void*), void* arg);
+void thread_exit();
 
 typedef struct {
     int locked;

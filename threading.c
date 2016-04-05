@@ -7,6 +7,7 @@
 struct thread_t {
     void *rsp;
     thread_t prev, next;
+    int state;
 };
 
 struct slab_allocator threads_alloc;
@@ -20,6 +21,7 @@ void init_threading(void) {
     current_thread = slab_allocator_alloc(&threads_alloc);
     current_thread->prev = current_thread;
     current_thread->next = current_thread;
+    current_thread->state = THREAD_RUNNING;
 }
 
 void thread_entry(void);
@@ -49,6 +51,7 @@ thread_t create_thread(void (*entry)(void*), void* arg) {
     t->next = current_thread->next;
     t->prev->next = t;
     t->next->prev = t;
+    t->state = THREAD_RUNNING;
     spin_unlock(&threads_mgmt_lock);
     return t;
 }
@@ -57,6 +60,14 @@ void* switch_thread_switch(void* old_rsp) {
     current_thread->rsp = old_rsp;
     current_thread = current_thread->next;
     return current_thread->rsp;
+}
+
+void thread_exit() {
+    current_thread->state = THREAD_TERMINATED;
+    current_thread->prev->next = current_thread->next;
+    current_thread->next->prev = current_thread->prev;
+    yield();
+    die("Returned from yield() in thread_exit()");
 }
 
 void exit_unclean(void) {

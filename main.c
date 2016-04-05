@@ -42,6 +42,7 @@ void thread_2(void *arg) {
         printf("thread_2(%d, %p)\n", i, arg);
         work();
     }
+    thread_exit();
 }
 
 void main(void) {
