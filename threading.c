@@ -14,10 +14,12 @@ struct slab_allocator threads_alloc;
 thread_t current_thread;
 
 spin_lock_t serial_lock;
+spin_lock_t threads_mgmt_lock;
 
 void init_threading(void) {
     slab_allocator_init(&threads_alloc, sizeof(struct thread_t), 4096);
     spin_lock_init(&serial_lock);
+    spin_lock_init(&threads_mgmt_lock);
     current_thread = slab_allocator_alloc(&threads_alloc);
     current_thread->next = current_thread;
 }
@@ -26,7 +28,6 @@ void thread_entry(void);
 
 #define THREAD_STACK_SIZE 8192
 thread_t create_thread(void (*entry)(void*), void* arg) {
-
     uint64_t rflags = get_rflags();
     rflags &= ~0x000008D5; // clear status bits: CF, PF, AF, ZF, SF, OF
     rflags &= ~(1 << 10); // clear control bit to comply with ABI: DF
@@ -43,10 +44,12 @@ thread_t create_thread(void (*entry)(void*), void* arg) {
     *--stack = 0; // r14
     *--stack = 0; // r15
 
+    spin_lock(&threads_mgmt_lock);
     thread_t t = slab_allocator_alloc(&threads_alloc);
     t->rsp = stack;
     t->next = current_thread->next;
     current_thread->next = t;
+    spin_unlock(&threads_mgmt_lock);
     return t;
 }
 
