@@ -2,6 +2,7 @@
 #define _SLAB_H
 
 #include <stddef.h>
+#include "threading.h"
 
 struct slab_allocator {
     size_t item_size;
@@ -9,6 +10,7 @@ struct slab_allocator {
     struct slab *partials;
     int slab_nodes;
     int fulls_cnt;
+    spin_lock_t lock;
 };
 
 void slab_allocator_init(struct slab_allocator* a, size_t item_size, size_t align);

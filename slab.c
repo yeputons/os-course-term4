@@ -127,9 +127,11 @@ void slab_allocator_init(struct slab_allocator* a, size_t item_size, size_t alig
     calculate_slab(a->item_size, align, &a->slab_nodes_start, &a->slab_nodes, &a->slab_alloc_mem);
     a->partials = NULL;
     a->fulls_cnt = 0;
+    memset(&a->lock, 0, sizeof a->lock);
 }
 
 void* slab_allocator_alloc(struct slab_allocator *a) {
+    spin_lock(&a->lock);
     dbg("slab_allocator_alloc()\n");
     if (!a->partials) {
         a->partials = slab_create(a);
@@ -151,10 +153,12 @@ void* slab_allocator_alloc(struct slab_allocator *a) {
         s->next_slab = NULL;
         a->fulls_cnt++;
     }
+    spin_unlock(&a->lock);
     return result;
 }
 
 void slab_allocator_free(struct slab_allocator *a, void *ptr) {
+    spin_lock(&a->lock);
     dbg("slab_allocator_free()\n");
     struct slab* s = va(get_big_phys_aligned_block_start(pa(ptr)));
     dbg("  Pointer %p lies in slab@%p\n", ptr, s);
@@ -188,6 +192,7 @@ void slab_allocator_free(struct slab_allocator *a, void *ptr) {
         s->prev_slab = s->next_slab = NULL;
         slab_destroy(s);
     }
+    spin_unlock(&a->lock);
 }
 
 void slab_allocator_debug_print(struct slab_allocator *a) {
