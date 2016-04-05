@@ -5,9 +5,11 @@
 #include "memory.h"
 
 struct thread_t {
+    void *stack_start;
     void *rsp;
     thread_t prev, next;
-    int state;
+    volatile int state;
+    spin_lock_t wait_lock;
 };
 
 struct slab_allocator threads_alloc;
@@ -33,7 +35,9 @@ thread_t create_thread(void (*entry)(void*), void* arg) {
     rflags &= ~(1 << 10); // clear control bit to comply with ABI: DF
     rflags |= 1 << 9; // set IF
 
-    uint64_t *stack = (void*)((char*)valloc(THREAD_STACK_SIZE) + THREAD_STACK_SIZE);
+    thread_t t = slab_allocator_alloc(&threads_alloc);
+    t->stack_start = valloc(THREAD_STACK_SIZE);
+    uint64_t *stack = (void*)((char*)t->stack_start + THREAD_STACK_SIZE);
 
     *--stack = (uint64_t)thread_entry; // return address
     *--stack = rflags; // rflags
@@ -45,7 +49,6 @@ thread_t create_thread(void (*entry)(void*), void* arg) {
     *--stack = 0; // r15
 
     spin_lock(&threads_mgmt_lock);
-    thread_t t = slab_allocator_alloc(&threads_alloc);
     t->rsp = stack;
     t->prev = current_thread;
     t->next = current_thread->next;
@@ -62,12 +65,23 @@ void* switch_thread_switch(void* old_rsp) {
     return current_thread->rsp;
 }
 
+int get_thread_state(thread_t t) {
+    return t->state;
+}
+
 void thread_exit() {
     current_thread->state = THREAD_TERMINATED;
     current_thread->prev->next = current_thread->next;
     current_thread->next->prev = current_thread->prev;
     yield();
     die("Returned from yield() in thread_exit()");
+}
+
+void wait(thread_t t) {
+    while (t->state != THREAD_TERMINATED) {
+        yield();
+    }
+    vfree(t->stack_start);
 }
 
 void exit_unclean(void) {

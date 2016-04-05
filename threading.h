@@ -11,6 +11,8 @@ void init_threading(void);
 #define THREAD_TERMINATED 2
 
 thread_t create_thread(void (*entry)(void*), void* arg);
+int get_thread_state(thread_t t);
+void wait(thread_t t);
 void thread_exit();
 
 typedef struct {
