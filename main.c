@@ -81,7 +81,7 @@ void main(void) {
     printf("OK\n");
 
     thread_t th1 = create_thread(thread_1, (void*)0x1234);
-    thread_t th2 = create_thread(thread_2, (void*)300);
+    thread_t th2 = create_thread(thread_2, (void*)100);
     for (int i = 0; get_thread_state(th2) == THREAD_RUNNING; i++) {
         printf("main thread %d\n", i);
         work();
