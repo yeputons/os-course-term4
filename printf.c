@@ -15,12 +15,14 @@ int printf(const char *format, ...) {
 }
 
 int vprintf(const char* format, va_list args) {
+    static spin_lock_t printf_lock;
+
     int printed = 0;
-    spin_lock(&serial_lock);
+    spin_lock(&printf_lock);
     #define addchar(c) { putchar(c); printed++; }
     #include "printf_impl.c"
     #undef addchar
-    spin_unlock(&serial_lock);
+    spin_unlock(&printf_lock);
     return printed;
 }
 

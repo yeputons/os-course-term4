@@ -16,8 +16,6 @@ typedef struct {
 void spin_lock(spin_lock_t *lock);
 void spin_unlock(spin_lock_t *lock);
 
-extern spin_lock_t serial_lock;
-
 void yield(void);
 
 #endif

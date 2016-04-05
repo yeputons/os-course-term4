@@ -20,6 +20,8 @@
 
 #define TRANSMIT_OVER_BIT (1 << 5)
 
+spin_lock_t serial_lock;
+
 void init_serial(void) {
     out8(LCR_PORT, DLAB | SERIAL_CONTROL);
     out8(SPD_LOW_PORT, SERIAL_DIVISOR_LATCH & 0xFF);

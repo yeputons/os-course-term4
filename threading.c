@@ -13,7 +13,6 @@ struct slab_allocator threads_alloc;
 
 thread_t current_thread;
 
-spin_lock_t serial_lock;
 spin_lock_t threads_mgmt_lock;
 
 void init_threading(void) {
