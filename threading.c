@@ -154,3 +154,41 @@ void spin_unlock(spin_lock_t *lock) {
     }
     set_rflags(rflags);
 }
+
+void mutex_lock(mutex_t *lock) {
+    uint64_t rflags = get_rflags();
+    __asm__("cli");
+    if (lock->locked && lock->owner != current_thread) {
+        while (lock->locked && lock->owner != current_thread) {
+            log("thread %p cannot lock mutex %p, blocks\n", current_thread, lock);
+            list_add_tail(&current_thread->list, &lock->queue);
+            current_thread->state = THREAD_WAITING;
+            yield();
+        }
+    }
+    lock->locked++;
+    if (!lock->queue.next) {
+        log("initializing queue on mutex %p\n", lock);
+        list_init(&lock->queue);
+    }
+    lock->owner = current_thread;
+    set_rflags(rflags);
+}
+
+void mutex_unlock(mutex_t *lock) {
+    uint64_t rflags = get_rflags();
+    __asm__("cli");
+    assert(lock->locked);
+    assert(lock->owner == current_thread);
+    if (!--lock->locked) {
+        lock->owner = NULL;
+        if (!list_empty(&lock->queue)) {
+            thread_t t = UNL(list_first(&lock->queue));
+            log("thread %p unlocks mutex %p and notifies thread %p\n", current_thread, lock, t);
+            t->state = THREAD_RUNNING;
+            list_del(&t->list);
+            list_add_tail(&t->list, &running_threads);
+        }
+    }
+    set_rflags(rflags);
+}
