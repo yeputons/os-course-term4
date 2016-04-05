@@ -75,6 +75,21 @@ void thread_sleeper(void *arg) {
     thread_exit();
 }
 
+mutex_t mutex;
+
+void thread_mutex(void *arg) {
+    uint64_t id = (uint64_t)arg;
+    for (int i = 0; i < 10; i++) {
+        mutex_lock(&mutex);
+        printf("Lock by %d (i=%d)\n", id, i);
+        work();
+        printf("Unlock by %d\n", id);
+        mutex_unlock(&mutex);
+        work();
+    }
+    thread_exit();
+}
+
 void main(void) {
     __asm__("cli");
     init_serial();
@@ -132,5 +147,14 @@ void main(void) {
     sleeper_stop = true;
     wake(sleeper);
     wait(sleeper);
+
+    printf("Testing mutex\n");
+    thread_t th_mutex[5];
+    for (int i = 0; i < 5; i++) {
+        th_mutex[i] = create_thread(thread_mutex, (void*)(uint64_t)i);
+    }
+    for (int i = 0; i < 5; i++) {
+        wait(th_mutex[i]);
+    }
     thread_exit();
 }
