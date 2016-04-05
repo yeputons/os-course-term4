@@ -3,6 +3,7 @@
 #include "printf.h"
 #include "util.h"
 #include "memory.h"
+#include "list.h"
 
 #define THREADING_DEBUG
 
@@ -15,12 +16,14 @@
 struct thread {
     void *stack_start;
     void *rsp;
-    thread_t prev, next;
+    struct list_head list;
     volatile int state;
 };
+#define UNL(ptr) LIST_ENTRY(ptr, struct thread, list)
 
 struct slab_allocator threads_alloc;
 
+LIST_HEAD(running_threads);
 thread_t current_thread;
 
 spin_lock_t threads_mgmt_lock;
@@ -36,8 +39,6 @@ void init_threading(void) {
     slab_allocator_init(&threads_alloc, sizeof(struct thread), 1);
     current_thread = slab_allocator_alloc(&threads_alloc);
     current_thread->stack_start = 0;
-    current_thread->prev = current_thread;
-    current_thread->next = current_thread;
     current_thread->state = THREAD_RUNNING;
     create_thread(idle_thread, NULL);
 }
@@ -67,18 +68,19 @@ thread_t create_thread(void (*entry)(void*), void* arg) {
     spin_lock(&threads_mgmt_lock);
     log("created thread %p on stack %p, entry is %p(%llx)\n", t, t->stack_start, entry, arg);
     t->rsp = stack;
-    t->prev = current_thread;
-    t->next = current_thread->next;
-    t->prev->next = t;
-    t->next->prev = t;
     t->state = THREAD_RUNNING;
+    list_add_tail(&t->list, &running_threads);
     spin_unlock(&threads_mgmt_lock);
     return t;
 }
 
 void* switch_thread_switch(void* old_rsp) {
     current_thread->rsp = old_rsp;
-    current_thread = current_thread->next;
+    if (current_thread->state == THREAD_RUNNING) {
+        list_add_tail(&current_thread->list, &running_threads);
+    }
+    current_thread = UNL(list_first(&running_threads));
+    list_del(&current_thread->list);
     return current_thread->rsp;
 }
 
@@ -90,8 +92,6 @@ void thread_exit(void) {
     spin_lock(&threads_mgmt_lock);
     log("thread %p is exiting\n", current_thread);
     current_thread->state = THREAD_TERMINATED;
-    current_thread->prev->next = current_thread->next;
-    current_thread->next->prev = current_thread->prev;
     spin_unlock(&threads_mgmt_lock);
     yield();
     die("Returned from yield() in thread_exit()");
