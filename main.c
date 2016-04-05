@@ -48,6 +48,21 @@ void thread_2(void *arg) {
     thread_exit();
 }
 
+void thread_chain(void *arg) {
+    long long depth = (long long)arg;
+    printf("chain(%lld)\n", depth);
+    for (int i = 0; i < 50; i++) {
+        work();
+    }
+    if (depth > 0) {
+        wait(create_thread(thread_chain, (void*)(depth - 1)));
+    }
+    for (int i = 0; i < 50; i++) {
+        work();
+    }
+    thread_exit();
+}
+
 void main(void) {
     __asm__("cli");
     init_serial();
@@ -91,5 +106,8 @@ void main(void) {
     thread_1_stop = true;
     wait(th1);
     printf("Thread1 is terminated\n");
+
+    printf("Starting chain\n");
+    wait(create_thread(thread_chain, (void*)20));
     thread_exit();
 }
