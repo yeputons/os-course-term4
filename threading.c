@@ -4,6 +4,14 @@
 #include "util.h"
 #include "memory.h"
 
+#define THREADING_DEBUG
+
+#ifdef THREADING_DEBUG
+#define log(...) printf(__VA_ARGS__)
+#else
+#define log(...)
+#endif
+
 struct thread_t {
     void *stack_start;
     void *rsp;
@@ -49,6 +57,7 @@ thread_t create_thread(void (*entry)(void*), void* arg) {
     *--stack = 0; // r15
 
     spin_lock(&threads_mgmt_lock);
+    log("created thread %p on stack %p, entry is %p(%llx)\n", t, t->stack_start, entry, arg);
     t->rsp = stack;
     t->prev = current_thread;
     t->next = current_thread->next;
@@ -70,9 +79,12 @@ int get_thread_state(thread_t t) {
 }
 
 void thread_exit(void) {
+    spin_lock(&threads_mgmt_lock);
+    log("thread %p is exiting\n", current_thread);
     current_thread->state = THREAD_TERMINATED;
     current_thread->prev->next = current_thread->next;
     current_thread->next->prev = current_thread->prev;
+    spin_unlock(&threads_mgmt_lock);
     yield();
     die("Returned from yield() in thread_exit()");
 }
@@ -81,6 +93,7 @@ void wait(thread_t t) {
     while (t->state != THREAD_TERMINATED) {
         yield();
     }
+    log("terminated thread %p and freed its stack %p\n", t, t->stack_start);
     vfree(t->stack_start);
 }
 
