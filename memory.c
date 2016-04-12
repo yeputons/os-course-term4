@@ -52,6 +52,10 @@ phys_t alloc_big_phys_aligned(size_t size) {
     return buddy_alloc(&first_buddy, size);
 }
 
+phys_t get_big_phys_aligned_block_start(phys_t ptr) {
+    return buddy_get_block_start(&first_buddy, ptr);
+}
+
 void free_big_phys_aligned(phys_t ptr) {
     buddy_free(&first_buddy, ptr);
 }
