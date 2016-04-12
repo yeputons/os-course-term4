@@ -4,6 +4,7 @@
 #include "multiboot.h"
 #include "buddy.h"
 #include "paging.h"
+#include "slab.h"
 
 struct buddy_allocator first_buddy;
 
@@ -42,10 +43,32 @@ void init_memory(void) {
     buddy_init(&first_buddy, 0);
     printf("OK\n");
     buddy_debug_print(&first_buddy);
+    printf("\n");
 
     printf("Initializing paging... ");
     init_paging();
     printf("OK\n");
+
+    printf("Testing slab allocator:\n");
+    struct slab_allocator a;
+    slab_allocator_init(&a, 1024, 1024);
+    int k = 10;
+    void **ptrs = va(alloc_big_phys_aligned(sizeof(void*) * k));
+    for (int i = 0; i < k; i++) {
+        ptrs[i] = slab_allocator_alloc(&a);
+    }
+    slab_allocator_free(&a, ptrs[1]);
+    slab_allocator_free(&a, ptrs[4]);
+    slab_allocator_debug_print(&a);
+    slab_allocator_free(&a, ptrs[0]);
+    slab_allocator_free(&a, ptrs[2]);
+    slab_allocator_debug_print(&a);
+    slab_allocator_free(&a, ptrs[3]);
+    for (int i = 5; i < k; i++) {
+        slab_allocator_free(&a, ptrs[i]);
+    }
+    slab_allocator_deinit(&a);
+    printf("Done with testing slab\n\n");
 }
 
 phys_t alloc_big_phys_aligned(size_t size) {
