@@ -9,6 +9,7 @@
 
 //#define BUDDY_DEBUG
 
+// Marks single element as free and adds it to linked list
 static void add_one(struct buddy_allocator *a, int lev, int i) {
     assert(!a->buddies[i].is_free);
     a->buddies[i].is_free = 1;
@@ -23,6 +24,7 @@ static void add_one(struct buddy_allocator *a, int lev, int i) {
     a->firsts[lev] = i;
 }
 
+// Marks single element as non-free and removes it from linked list
 static void remove_one(struct buddy_allocator *a, int lev, int i) {
     assert(a->buddies[i].is_free);
     int p = a->buddies[i].prev_free;
@@ -50,6 +52,8 @@ static void remove_one(struct buddy_allocator *a, int lev, int i) {
 #define lies_on_level(lev, i) ((1 << (lev)) <= (i) && (i) <= (2 << (lev)))
 #define buddy_size(lev) (MIN_PAGE_SIZE << (LAST_LEV - (lev)))
 
+// Used in initialization for marking consecutive segments on the last level as available/unavailable
+// Should not be run after initialization as it works with the last level only
 static void mark_for_init(struct buddy_allocator *a, phys_t start, phys_t end, bool available) {
     #ifdef BUDDY_DEBUG
     printf("reserve_for_init %p..%p\n", start, end);
@@ -142,6 +146,7 @@ void buddy_init(struct buddy_allocator *a, phys_t start) {
     a->start = start;
     assert(a->start < (1LL << 48));
     assert(a->start % MAX_PAGE_SIZE == 0);
+    // Initially everything is unavailable
     for (int i = 0; i < BUDDIES_CNT; i++) {
         a->buddies[i].prev_free = -1;
         a->buddies[i].next_free = -1;
@@ -161,8 +166,9 @@ void buddy_init(struct buddy_allocator *a, phys_t start) {
         segm = (void*)((uint64_t)segm + segm->size + 4);
     }
     mark_for_init(a, 0, 1024 * 1024, /* available */ false);
-    mark_for_init(a, (phys_t)text_phys_begin, (phys_t)bss_phys_end, /* available, */ false);
+    mark_for_init(a, (phys_t)text_phys_begin, (phys_t)bss_phys_end, /* available */ false);
 
+    // Initialization is completed, now we can merge available segments into bigger
     for (int lev = LAST_LEV; lev >= 0; lev--) {
         int start = (1 << lev), end = start + (1 << lev);
         for (int i = start; i < end; i += 2) {
@@ -172,6 +178,7 @@ void buddy_init(struct buddy_allocator *a, phys_t start) {
 }
 
 
+// Tries to retrieve a block from level 'lev', splitting bigger blocks if needed
 static int get_from_level(struct buddy_allocator *a, int lev) {
     #ifdef BUDDY_DEBUG
     printf("  get_from_level(%d)\n", lev);
@@ -223,6 +230,7 @@ phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
     return a->start + (uint64_t)result * buddy_size(lev);
 }
 
+// Returns start of block which contains 'ptr'
 phys_t buddy_get_block_start(struct buddy_allocator *a, phys_t ptr) {
     assert(a->start <= ptr && ptr < a->start + MAX_PAGE_SIZE);
 

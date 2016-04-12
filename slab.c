@@ -4,12 +4,20 @@
 #include "util.h"
 #include "printf.h"
 
+/**
+ * Single slab cannot exist without slab_allocator, as the latter holds
+ * everything about inner structure of slab: amount of nodes (available memory), layout, etc.
+ * Slab layout: 'struct slab' comes first, then some bytes are skipped for proper alignment, then actual data comes one after another,
+ * so it looks very alike slab for "big" objects
+ */
+
 struct slab_node {
     int next_free;
 };
 struct slab {
     struct slab *prev_slab, *next_slab;
-    int first_free, allocated;
+    int first_free;
+    int allocated;
     struct slab_node nodes[];
 };
 
@@ -19,8 +27,7 @@ struct slab {
 #define MIN_SLAB_NODES 10
 #define align_by(x, align) (((x) + (align) - 1) / (align) * (align))
 
-// Slab alignment: struct slab comes first, then some bytes are skipped for proper alignment, then actual data comes one after another
-
+// Given size of item and required alignment calculates parameters of a single slab
 void calculate_slab(size_t item_size, size_t align, size_t *out_slab_nodes_start, int *out_nodes, size_t *out_alloc_mem) {
     #ifdef SLAB_DEBUG
     printf("get_slab_size(item_size=%zd, align=%zd)\n", item_size, align);
