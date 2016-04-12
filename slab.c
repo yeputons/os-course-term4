@@ -28,7 +28,7 @@ struct slab {
 #define align_by(x, align) (((x) + (align) - 1) / (align) * (align))
 
 // Given size of item and required alignment calculates parameters of a single slab
-void calculate_slab(size_t item_size, size_t align, size_t *out_slab_nodes_start, int *out_nodes, size_t *out_alloc_mem) {
+static void calculate_slab(size_t item_size, size_t align, size_t *out_slab_nodes_start, int *out_nodes, size_t *out_alloc_mem) {
     #ifdef SLAB_DEBUG
     printf("get_slab_size(item_size=%zd, align=%zd)\n", item_size, align);
     #endif
@@ -69,7 +69,7 @@ void calculate_slab(size_t item_size, size_t align, size_t *out_slab_nodes_start
     *out_alloc_mem = alloc_mem;
 }
 
-struct slab* slab_create(struct slab_allocator *a) {
+static struct slab* slab_create(struct slab_allocator *a) {
     struct slab* slab = va(alloc_big_phys_aligned(a->slab_alloc_mem));
     slab->prev_slab = NULL;
     slab->next_slab = NULL;
@@ -81,7 +81,7 @@ struct slab* slab_create(struct slab_allocator *a) {
     return slab;
 }
 
-void* slab_alloc(struct slab_allocator *a, struct slab* slab) {
+static void* slab_alloc(struct slab_allocator *a, struct slab* slab) {
     int id = slab->first_free;
     assert(id >= 0);
     slab->allocated++;
@@ -90,7 +90,7 @@ void* slab_alloc(struct slab_allocator *a, struct slab* slab) {
     return ((char*)slab + a->slab_nodes_start + a->item_size * id);
 }
 
-void slab_free(struct slab_allocator *a, struct slab* slab, void *ptr) {
+static void slab_free(struct slab_allocator *a, struct slab* slab, void *ptr) {
     int id = ((char*)ptr - (char*)slab - a->slab_nodes_start) / a->item_size;
     assert(slab->nodes[id].next_free == id);
     assert(slab->allocated >= 1);
@@ -99,14 +99,14 @@ void slab_free(struct slab_allocator *a, struct slab* slab, void *ptr) {
     slab->allocated--;
 }
 
-void slab_destroy(struct slab* slab) {
+static void slab_destroy(struct slab* slab) {
     assert(!slab->allocated);
     assert(!slab->prev_slab);
     assert(!slab->next_slab);
     free_big_phys_aligned(pa(slab));
 }
 
-void slab_debug_print(struct slab_allocator *a, struct slab *s) {
+static void slab_debug_print(struct slab_allocator *a, struct slab *s) {
     printf("slab@%p; prev=%p, next=%p\n", s, s->prev_slab, s->next_slab);
     printf("  allocated=%d, first_free=%d\n", s->allocated, s->first_free);
     for (int i = 0; i < a->slab_nodes; i++) {
