@@ -223,6 +223,26 @@ phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size) {
     return a->start + (uint64_t)result * buddy_size(lev);
 }
 
+phys_t buddy_get_block_start(struct buddy_allocator *a, phys_t ptr) {
+    assert(a->start <= ptr && ptr < a->start + MAX_PAGE_SIZE);
+
+    int i = (ptr - a->start) / MIN_PAGE_SIZE + LAST_LEV_START;
+    int lev = LAST_LEV;
+
+    for (;;) {
+        assert(lies_on_level(lev, i));
+        int child = i << (LAST_LEV - lev);
+        if (a->buddies[child].allocated_level != BUDDY_LEVELS) {
+            assert(a->buddies[child].allocated_level <= lev);
+            child -= 1 << LAST_LEV;
+            return a->start + (uint64_t)child * MIN_PAGE_SIZE;
+        }
+        i /= 2;
+        lev--;
+        assert(i >= 1);
+    }
+}
+
 void buddy_free(struct buddy_allocator *a, phys_t ptr) {
     assert(a->start <= ptr && ptr < a->start + MAX_PAGE_SIZE);
     assert((ptr - a->start) % MIN_PAGE_SIZE == 0);

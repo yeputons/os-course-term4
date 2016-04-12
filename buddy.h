@@ -24,6 +24,7 @@ void buddy_init(struct buddy_allocator *a, phys_t start);
 void buddy_debug_print(struct buddy_allocator *a);
 
 phys_t buddy_alloc(struct buddy_allocator *a, uint64_t size);
+phys_t buddy_get_block_start(struct buddy_allocator *a, phys_t ptr);
 void buddy_free(struct buddy_allocator *a, phys_t ptr);
 
 #endif
