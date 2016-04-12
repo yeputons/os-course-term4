@@ -16,7 +16,7 @@ struct slab {
 #define SLAB_DEBUG
 
 // ========== INDIVIDUAL SLABS ==========
-#define MIN_SLAB_NODES 1
+#define MIN_SLAB_NODES 10
 #define align_by(x, align) (((x) + (align) - 1) / (align) * (align))
 
 // Slab alignment: struct slab comes first, then some bytes are skipped for proper alignment, then actual data comes one after another
