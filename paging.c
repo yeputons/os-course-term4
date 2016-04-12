@@ -11,7 +11,7 @@
 //#define PAGING_DEBUG
 
 static phys_t alloc_page_table() {
-    phys_t table = alloc_phys_aligned(TABLE_SIZE);
+    phys_t table = alloc_big_phys_aligned(TABLE_SIZE);
     assert(table % 4096 == 0);
     memset(va(table), 0, TABLE_SIZE);
     return table;

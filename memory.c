@@ -48,10 +48,10 @@ void init_memory(void) {
     printf("OK\n");
 }
 
-phys_t alloc_phys_aligned(size_t size) {
+phys_t alloc_big_phys_aligned(size_t size) {
     return buddy_alloc(&first_buddy, size);
 }
 
-void free_phys_aligned(phys_t ptr) {
+void free_big_phys_aligned(phys_t ptr) {
     buddy_free(&first_buddy, ptr);
 }

@@ -40,8 +40,8 @@ static inline void *va(phys_t addr)
 
 void init_memory();
 
-phys_t alloc_phys_aligned(size_t size);
-void free_phys_aligned(phys_t ptr);
+phys_t alloc_big_phys_aligned(size_t size);
+void free_big_phys_aligned(phys_t ptr);
 
 extern uint64_t phys_mem_end;
 
